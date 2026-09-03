@@ -433,12 +433,11 @@
         }
       });
 
-      // Move app container to PiP window & show notice placeholder in main window
       pipWindow.document.body.appendChild(appContainer);
       if (pipPlaceholder) pipPlaceholder.classList.remove('hidden');
 
       btnPip.classList.add('active');
-      labelPip.textContent = '📌 원래 창으로 복원';
+      labelPip.textContent = '📌 원래 창으로 복원 (T)';
 
       pipWindow.addEventListener('pagehide', () => {
         restoreFromPiP();
@@ -453,7 +452,7 @@
     if (pipPlaceholder) pipPlaceholder.classList.add('hidden');
     document.body.appendChild(appContainer);
     btnPip.classList.remove('active');
-    labelPip.textContent = '📌 맨 위 창';
+    labelPip.textContent = '📌 맨 위 창 (T)';
     pipWindow = null;
     updateDisplay();
   }
@@ -555,6 +554,8 @@
         e.preventDefault();
         toggleFullscreen();
         break;
+      case 't':
+      case 'T':
       case 'p':
       case 'P':
         e.preventDefault();
