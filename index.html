@@ -18,33 +18,46 @@
   <div class="app-container" id="app">
     <!-- Top Bar Navigation & Mode Switcher -->
     <header class="top-bar">
-      <div class="mode-tabs" role="tablist">
+      <div class="top-bar-left">
         <button id="tab-timer" class="tab-btn active" role="tab" aria-selected="true" data-mode="timer">
-          <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <svg class="icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           루프 타이머
-        </button>
-        <button id="tab-stopwatch" class="tab-btn" role="tab" aria-selected="false" data-mode="stopwatch">
-          <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
-          스톱워치
         </button>
       </div>
 
-      <div class="top-actions">
-        <button id="btn-pip" class="icon-btn-text" title="다른 앱 위에 항상 고정 (단축키: T)">
-          <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="20" rx="3"/><rect x="11" y="11" width="9" height="9" rx="1" fill="currentColor"/></svg>
-          <span id="label-pip">📌 맨 위 창 (T)</span>
+      <!-- Shortcuts in Top Bar (Between Loop Timer and Stopwatch tabs) -->
+      <div class="shortcut-top-bar" title="단축키 안내">
+        <span><kbd>Space</kbd>시작</span>
+        <span><kbd>→</kbd><kbd>←</kbd>10초</span>
+        <span><kbd>↑</kbd><kbd>↓</kbd>1분</span>
+        <span><kbd>R</kbd>리셋</span>
+        <span><kbd>T</kbd>맨위창</span>
+        <span><kbd>F</kbd>전체화면</span>
+      </div>
+
+      <div class="top-bar-right">
+        <button id="tab-stopwatch" class="tab-btn" role="tab" aria-selected="false" data-mode="stopwatch">
+          <svg class="icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
+          스톱워치
         </button>
-        <button id="btn-sound-toggle" class="icon-btn" title="소리 토글">
-          <svg id="sound-icon-on" class="icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-          <svg id="sound-icon-off" class="icon hidden" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v6a1 1 0 0 0 1 1h4.58l3.71 3.71A1 1 0 0 0 20 19V9.41"/><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
-        </button>
-        <button id="btn-fullscreen" class="icon-btn" title="전체화면 (F)">
-          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-        </button>
+
+        <div class="top-actions">
+          <button id="btn-pip" class="icon-btn-text" title="다른 앱 위에 항상 고정 (단축키: T)">
+            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="20" rx="3"/><rect x="11" y="11" width="9" height="9" rx="1" fill="currentColor"/></svg>
+            <span id="label-pip">📌 맨 위 창 (T)</span>
+          </button>
+          <button id="btn-sound-toggle" class="icon-btn" title="소리 토글">
+            <svg id="sound-icon-on" class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <svg id="sound-icon-off" class="icon hidden" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v6a1 1 0 0 0 1 1h4.58l3.71 3.71A1 1 0 0 0 20 19V9.41"/><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
+          </button>
+          <button id="btn-fullscreen" class="icon-btn" title="전체화면 (F)">
+            <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          </button>
+        </div>
       </div>
     </header>
 
-    <!-- Main Display Section (80% viewport text) -->
+    <!-- Main Display Section (MAXIMIZED FONT SIZE) -->
     <main class="display-section">
       <!-- Status Badge / Loop Info -->
       <div class="status-container">
@@ -76,45 +89,27 @@
 
     <!-- Controls Bar -->
     <footer class="controls-bar">
-      <!-- Left Side: Controls & Stepper -->
-      <div class="controls-left">
-        <!-- Main Play/Pause/Reset Controls -->
-        <div class="main-controls">
-          <button id="btn-start-pause" class="ctrl-btn primary">
-            <svg id="icon-play" class="icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            <svg id="icon-pause" class="icon hidden" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-            <span id="label-start-pause">시작</span>
-          </button>
+      <!-- Main Play/Pause/Reset Controls -->
+      <div class="main-controls">
+        <button id="btn-start-pause" class="ctrl-btn primary">
+          <svg id="icon-play" class="icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <svg id="icon-pause" class="icon hidden" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <span id="label-start-pause">시작</span>
+        </button>
 
-          <button id="btn-reset" class="ctrl-btn secondary" title="리셋 (R)">
-            <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-            리셋
-          </button>
-        </div>
-
-        <!-- Loop Config Controls (Timer Mode Only) -->
-        <div id="loop-controls" class="loop-controls">
-          <label for="loop-count-input">반복 횟수:</label>
-          <div class="stepper">
-            <button id="btn-loop-minus" class="step-btn">-</button>
-            <input type="number" id="loop-count-input" value="1" min="1" max="999" aria-label="반복 횟수">
-            <button id="btn-loop-plus" class="step-btn">+</button>
-          </div>
-        </div>
+        <button id="btn-reset" class="ctrl-btn secondary" title="리셋 (R)">
+          <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          리셋
+        </button>
       </div>
 
-      <!-- Right Side: Keyboard Shortcut Legend (Yellow box position) -->
-      <div class="shortcut-legend">
-        <div class="shortcut-title">⌨️ 단축키</div>
-        <div class="shortcut-grid">
-          <span><kbd>Space</kbd> 시작/일시정지</span>
-          <span><kbd>→</kbd> +10초</span>
-          <span><kbd>←</kbd> -10초</span>
-          <span><kbd>↑</kbd> +1분</span>
-          <span><kbd>↓</kbd> -1분</span>
-          <span><kbd>R</kbd> 리셋</span>
-          <span><kbd>T</kbd> 맨위창</span>
-          <span><kbd>F</kbd> 전체화면</span>
+      <!-- Loop Config Controls (Bottom Single Line) -->
+      <div id="loop-controls" class="loop-controls">
+        <label for="loop-count-input">반복 횟수:</label>
+        <div class="stepper">
+          <button id="btn-loop-minus" class="step-btn">-</button>
+          <input type="number" id="loop-count-input" value="1" min="1" max="999" aria-label="반복 횟수">
+          <button id="btn-loop-plus" class="step-btn">+</button>
         </div>
       </div>
     </footer>

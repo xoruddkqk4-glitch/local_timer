@@ -26,6 +26,8 @@
 
   // Document Picture-in-Picture window reference
   let pipWindow = null;
+  let originalWidth = 960;
+  let originalHeight = 540;
 
   // --- DOM Elements ---
   const appContainer = document.getElementById('app');
@@ -67,10 +69,10 @@
   // --- Window Quarter Screen Position (Top-Left 1/4 Screen) ---
   function resizeToQuarterScreen() {
     try {
-      const targetWidth = Math.floor(window.screen.availWidth / 2);
-      const targetHeight = Math.floor(window.screen.availHeight / 2);
+      originalWidth = Math.floor(window.screen.availWidth / 2);
+      originalHeight = Math.floor(window.screen.availHeight / 2);
       window.moveTo(0, 0);
-      window.resizeTo(targetWidth, targetHeight);
+      window.resizeTo(originalWidth, originalHeight);
     } catch (e) {
       console.warn('Window resize/move restricted by browser settings:', e);
     }
@@ -190,21 +192,22 @@
     adjustFontSizeToViewport();
   }
 
-  // --- Dynamic 80% Width & Height Smart Fitting ---
+  // --- Dynamic Maximum Font Size Fitting ---
   function adjustFontSizeToViewport() {
     if (!timeWrapper || !displaySection) return;
 
     const text = timeDisplay.textContent + (mode === 'stopwatch' ? '.00' : '');
     const textLength = text.length;
 
-    const wrapperWidth = timeWrapper.clientWidth || (window.innerWidth * 0.9);
-    const wrapperHeight = timeWrapper.clientHeight || (window.innerHeight * 0.35);
+    const wrapperWidth = timeWrapper.clientWidth || (window.innerWidth * 0.95);
+    const wrapperHeight = timeWrapper.clientHeight || (window.innerHeight * 0.45);
 
-    const fontFromWidth = (wrapperWidth * 0.82) / (textLength * 0.58);
-    const fontFromHeight = wrapperHeight * 0.85;
+    // Maximize width & height utilization
+    const fontFromWidth = (wrapperWidth * 0.9) / (textLength * 0.55);
+    const fontFromHeight = wrapperHeight * 0.95;
 
     const finalFontSize = Math.min(fontFromWidth, fontFromHeight);
-    timeDisplay.style.fontSize = `${Math.max(26, Math.floor(finalFontSize))}px`;
+    timeDisplay.style.fontSize = `${Math.max(30, Math.floor(finalFontSize))}px`;
   }
 
   window.addEventListener('resize', adjustFontSizeToViewport);
@@ -306,7 +309,7 @@
     updateDisplay();
   }
 
-  // --- Adjust Time (+10s, -10s, +1m, -1m via keyboard or helpers) ---
+  // --- Adjust Time (+10s, -10s, +1m, -1m) ---
   function adjustTime(secondsDelta) {
     playClickSound();
     if (mode === 'timer') {
@@ -390,13 +393,14 @@
     }
   }
 
-  // --- Document Picture-in-Picture (Always on Top Window) ---
+  // --- Document Picture-in-Picture (Single Window Experience) ---
   async function toggleDocumentPiP() {
     if (!('documentPictureInPicture' in window)) {
       alert('사용 중인 브라우저가 Document Picture-in-Picture (맨 위 창)를 지원하지 않거나 파일 프로토콜 제한이 있습니다.\n\nChrome / Edge 116+ 브라우저를 사용해 주세요!');
       return;
     }
 
+    // Restore if already open
     if (pipWindow) {
       pipWindow.close();
       return;
@@ -411,6 +415,7 @@
         height: height
       });
 
+      // Copy styles
       [...document.styleSheets].forEach((styleSheet) => {
         try {
           const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
@@ -432,6 +437,12 @@
       btnPip.classList.add('active');
       labelPip.textContent = '📌 원래 창으로 복원 (T)';
 
+      // Minimize parent window so ONLY 1 main window (the PiP window) is active
+      try {
+        window.resizeTo(280, 50);
+        window.moveTo(0, 0);
+      } catch (e) {}
+
       pipWindow.addEventListener('pagehide', () => {
         restoreFromPiP();
       });
@@ -447,6 +458,12 @@
     btnPip.classList.remove('active');
     labelPip.textContent = '📌 맨 위 창 (T)';
     pipWindow = null;
+
+    try {
+      window.resizeTo(originalWidth, originalHeight);
+      window.moveTo(0, 0);
+    } catch (e) {}
+
     updateDisplay();
   }
 
