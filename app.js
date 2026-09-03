@@ -442,7 +442,7 @@
       if (pipPlaceholder) pipPlaceholder.classList.remove('hidden');
 
       btnPip.classList.add('active');
-      labelPip.textContent = '📌 원래 창으로 복원 (T)';
+      labelPip.textContent = '📌 복원 (T)';
 
       try {
         window.resizeTo(280, 50);
