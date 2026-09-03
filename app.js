@@ -29,10 +29,14 @@
 
   // --- DOM Elements ---
   const appContainer = document.getElementById('app');
+  const pipPlaceholder = document.getElementById('pip-placeholder');
+  const btnPipRestore = document.getElementById('btn-pip-restore');
+
   const tabTimer = document.getElementById('tab-timer');
   const tabStopwatch = document.getElementById('tab-stopwatch');
   
   const btnPip = document.getElementById('btn-pip');
+  const labelPip = document.getElementById('label-pip');
   const btnSoundToggle = document.getElementById('btn-sound-toggle');
   const soundIconOn = document.getElementById('sound-icon-on');
   const soundIconOff = document.getElementById('sound-icon-off');
@@ -52,8 +56,6 @@
   const presetBtns = document.querySelectorAll('.preset-btn');
 
   const btnStartPause = document.getElementById('btn-start-pause');
-  const iconPlay = document.iconPlay || document.getElementById('icon-play');
-  const iconPause = document.iconPause || document.getElementById('icon-pause');
   const labelStartPause = document.getElementById('label-start-pause');
 
   const btnReset = document.getElementById('btn-reset');
@@ -203,10 +205,7 @@
     const wrapperWidth = timeWrapper.clientWidth || (window.innerWidth * 0.9);
     const wrapperHeight = timeWrapper.clientHeight || (window.innerHeight * 0.35);
 
-    // Calculate font size from available width (~80% width)
     const fontFromWidth = (wrapperWidth * 0.82) / (textLength * 0.58);
-
-    // Calculate font size from available height (~85% height)
     const fontFromHeight = wrapperHeight * 0.85;
 
     const finalFontSize = Math.min(fontFromWidth, fontFromHeight);
@@ -399,24 +398,26 @@
   // --- Document Picture-in-Picture (Always on Top Window) ---
   async function toggleDocumentPiP() {
     if (!('documentPictureInPicture' in window)) {
-      alert('사용 중인 브라우저가 Document Picture-in-Picture (맨 위 창)를 지원하지 않거나 파일 프로토콜 제한이 있습니다.\n\nChrome / Edge 116+ 브라우저를 사용하시거나 `타이머실행.bat`으로 실행해 주세요!');
+      alert('사용 중인 브라우저가 Document Picture-in-Picture (맨 위 창)를 지원하지 않거나 파일 프로토콜 제한이 있습니다.\n\nChrome / Edge 116+ 브라우저를 사용해 주세요!');
       return;
     }
 
+    // Restore if already open
     if (pipWindow) {
       pipWindow.close();
       return;
     }
 
     try {
-      const width = Math.floor(window.screen.availWidth / 2);
-      const height = Math.floor(window.screen.availHeight / 2);
+      const width = Math.min(Math.floor(window.screen.availWidth / 2), 650);
+      const height = Math.min(Math.floor(window.screen.availHeight / 2), 480);
 
       pipWindow = await window.documentPictureInPicture.requestWindow({
         width: width,
         height: height
       });
 
+      // Copy styles
       [...document.styleSheets].forEach((styleSheet) => {
         try {
           const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
@@ -432,17 +433,39 @@
         }
       });
 
+      // Move app container to PiP window & show notice placeholder in main window
       pipWindow.document.body.appendChild(appContainer);
+      if (pipPlaceholder) pipPlaceholder.classList.remove('hidden');
+
+      btnPip.classList.add('active');
+      labelPip.textContent = '📌 원래 창으로 복원';
 
       pipWindow.addEventListener('pagehide', () => {
-        document.body.appendChild(appContainer);
-        pipWindow = null;
-        updateDisplay();
+        restoreFromPiP();
       });
 
     } catch (err) {
       console.error('PiP request failed:', err);
     }
+  }
+
+  function restoreFromPiP() {
+    if (pipPlaceholder) pipPlaceholder.classList.add('hidden');
+    document.body.appendChild(appContainer);
+    btnPip.classList.remove('active');
+    labelPip.textContent = '📌 맨 위 창';
+    pipWindow = null;
+    updateDisplay();
+  }
+
+  if (btnPipRestore) {
+    btnPipRestore.addEventListener('click', () => {
+      if (pipWindow) {
+        pipWindow.close();
+      } else {
+        restoreFromPiP();
+      }
+    });
   }
 
   // --- Event Listeners ---
