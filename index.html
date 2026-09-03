@@ -13,15 +13,19 @@
       <div class="mode-tabs" role="tablist">
         <button id="tab-timer" class="tab-btn active" role="tab" aria-selected="true" data-mode="timer">
           <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          루프 타이머 (Loop Timer)
+          루프 타이머
         </button>
         <button id="tab-stopwatch" class="tab-btn" role="tab" aria-selected="false" data-mode="stopwatch">
           <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
-          스톱워치 (Stopwatch)
+          스톱워치
         </button>
       </div>
 
       <div class="top-actions">
+        <button id="btn-pip" class="icon-btn-text" title="다른 앱 위에 항상 고정 (Always-on-Top)">
+          <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="20" rx="3"/><rect x="11" y="11" width="9" height="9" rx="1" fill="currentColor"/></svg>
+          📌 맨 위 창
+        </button>
         <button id="btn-sound-toggle" class="icon-btn" title="소리 토글">
           <svg id="sound-icon-on" class="icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
           <svg id="sound-icon-off" class="icon hidden" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v6a1 1 0 0 0 1 1h4.58l3.71 3.71A1 1 0 0 0 20 19V9.41"/><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
@@ -88,7 +92,7 @@
         </div>
       </div>
 
-      <!-- Adjust Time Shortcut Buttons Bar (Visual Helper & Mobile Friendly) -->
+      <!-- Adjust Time Shortcut Buttons Bar -->
       <div class="adjust-bar">
         <button class="adj-btn" id="adj-minus-1m" title="1분 차감 (아래 화살표)">-1분</button>
         <button class="adj-btn" id="adj-minus-10s" title="10초 차감 (왼쪽 화살표)">-10초</button>
@@ -105,6 +109,7 @@
       <span><kbd>↑</kbd> +1분</span>
       <span><kbd>↓</kbd> -1분</span>
       <span><kbd>F</kbd> 전체화면</span>
+      <span><kbd>P</kbd> 맨 위 창 고정</span>
       <span><kbd>R</kbd> 리셋</span>
     </div>
   </div>

@@ -24,11 +24,15 @@
   let soundEnabled = true;
   let audioCtx = null;
 
+  // Document Picture-in-Picture window reference
+  let pipWindow = null;
+
   // --- DOM Elements ---
   const appContainer = document.getElementById('app');
   const tabTimer = document.getElementById('tab-timer');
   const tabStopwatch = document.getElementById('tab-stopwatch');
   
+  const btnPip = document.getElementById('btn-pip');
   const btnSoundToggle = document.getElementById('btn-sound-toggle');
   const soundIconOn = document.getElementById('sound-icon-on');
   const soundIconOff = document.getElementById('sound-icon-off');
@@ -61,6 +65,21 @@
   const adjMinus10s = document.getElementById('adj-minus-10s');
   const adjPlus10s = document.getElementById('adj-plus-10s');
   const adjPlus1m = document.getElementById('adj-plus-1m');
+
+  // --- Window Quarter Screen Position (Top-Left 1/4 Screen) ---
+  function resizeToQuarterScreen() {
+    try {
+      const targetWidth = Math.floor(window.screen.availWidth / 2);
+      const targetHeight = Math.floor(window.screen.availHeight / 2);
+      window.moveTo(0, 0);
+      window.resizeTo(targetWidth, targetHeight);
+    } catch (e) {
+      console.warn('Window resize/move restricted by browser settings:', e);
+    }
+  }
+
+  // Execute on load
+  resizeToQuarterScreen();
 
   // --- Audio Synthesizer (Web Audio API for Offline Use) ---
   function getAudioContext() {
@@ -104,13 +123,11 @@
   }
 
   function playLoopChime() {
-    // Loop complete sound (D5 -> A5)
     playTone(587.33, 'sine', 0.25, 0);
     playTone(880.00, 'sine', 0.4, 0.15);
   }
 
   function playFinalAlarm() {
-    // Final timer completion alarm (C5 -> E5 -> G5 -> C6)
     playTone(523.25, 'triangle', 0.2, 0);
     playTone(659.25, 'triangle', 0.2, 0.15);
     playTone(783.99, 'triangle', 0.2, 0.3);
@@ -178,7 +195,6 @@
   // --- Dynamic 80% Viewport Width Text Sizing ---
   function adjustFontSizeToViewport() {
     const textLength = timeDisplay.textContent.length + (mode === 'stopwatch' ? 3 : 0);
-    // Dynamically adjust CSS custom font size clamp
     const baseVw = Math.min(80 / (textLength * 0.62), 26);
     timeDisplay.style.fontSize = `clamp(3rem, ${baseVw}vw, 34vh)`;
   }
@@ -188,8 +204,14 @@
   // --- Flash Visual Alert ---
   function triggerFlashAlert() {
     appContainer.classList.add('flash-alert');
+    if (pipWindow) {
+      pipWindow.document.body.classList.add('flash-alert');
+    }
     setTimeout(() => {
       appContainer.classList.remove('flash-alert');
+      if (pipWindow) {
+        pipWindow.document.body.classList.remove('flash-alert');
+      }
     }, 1500);
   }
 
@@ -204,7 +226,7 @@
     iconPause.classList.remove('hidden');
     labelStartPause.textContent = '일시정지';
     btnStartPause.classList.add('running');
-    modeStatusText.textContent = isRunning ? '작동 중...' : '일시정지됨';
+    modeStatusText.textContent = '작동 중...';
 
     if (mode === 'timer') {
       timerId = setInterval(() => {
@@ -212,7 +234,6 @@
           timerRemaining--;
           updateDisplay();
         } else {
-          // Timer reached 0! Check loop count
           if (currentLoop < totalLoops) {
             playLoopChime();
             triggerFlashAlert();
@@ -220,7 +241,6 @@
             timerRemaining = timerDuration;
             updateDisplay();
           } else {
-            // All loops finished!
             pauseTimer();
             playFinalAlarm();
             triggerFlashAlert();
@@ -287,7 +307,7 @@
         timerDuration = Math.max(1, timerDuration + secondsDelta);
         timerRemaining = timerDuration;
       }
-    } else { // Stopwatch mode
+    } else {
       stopwatchElapsed = Math.max(0, stopwatchElapsed + (secondsDelta * 1000));
     }
     updateDisplay();
@@ -361,9 +381,66 @@
     }
   }
 
+  // --- Document Picture-in-Picture (Always on Top Window) ---
+  async function toggleDocumentPiP() {
+    if (!('documentPictureInPicture' in window)) {
+      alert('사용 중인 브라우저가 Document Picture-in-Picture (맨 위 창)를 지원하지 않거나 파일 프로토콜 제한이 있습니다.\n\nChrome / Edge 116+ 브라우저를 사용하시거나 `타이머실행.bat`으로 실행해 주세요!');
+      return;
+    }
+
+    // Toggle off if already active
+    if (pipWindow) {
+      pipWindow.close();
+      return;
+    }
+
+    try {
+      const width = Math.floor(window.screen.availWidth / 2);
+      const height = Math.floor(window.screen.availHeight / 2);
+
+      pipWindow = await window.documentPictureInPicture.requestWindow({
+        width: width,
+        height: height
+      });
+
+      // Copy styles to PiP window
+      [...document.styleSheets].forEach((styleSheet) => {
+        try {
+          const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
+          const style = document.createElement('style');
+          style.textContent = cssRules;
+          pipWindow.document.head.appendChild(style);
+        } catch (e) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.type = styleSheet.type;
+          link.href = styleSheet.href;
+          pipWindow.document.head.appendChild(link);
+        }
+      });
+
+      // Move app container into PiP window
+      pipWindow.document.body.appendChild(appContainer);
+
+      // Handle close
+      pipWindow.addEventListener('pagehide', () => {
+        document.body.appendChild(appContainer);
+        pipWindow = null;
+        updateDisplay();
+      });
+
+    } catch (err) {
+      console.error('PiP request failed:', err);
+    }
+  }
+
   // --- Event Listeners ---
   tabTimer.addEventListener('click', () => setMode('timer'));
   tabStopwatch.addEventListener('click', () => setMode('stopwatch'));
+
+  if (btnPip) {
+    btnPip.addEventListener('click', toggleDocumentPiP);
+  }
 
   btnSoundToggle.addEventListener('click', () => {
     soundEnabled = !soundEnabled;
@@ -415,7 +492,6 @@
 
   // --- Keyboard Shortcuts Listener ---
   window.addEventListener('keydown', (e) => {
-    // Avoid triggering shortcuts when typing in inputs
     if (e.target.tagName === 'INPUT') return;
 
     switch (e.key) {
@@ -445,6 +521,11 @@
         e.preventDefault();
         toggleFullscreen();
         break;
+      case 'p':
+      case 'P':
+        e.preventDefault();
+        toggleDocumentPiP();
+        break;
       case 'r':
       case 'R':
         e.preventDefault();
@@ -454,6 +535,6 @@
   });
 
   // Initial setup
-  setPresetMinutes(5); // Default preset 5 min
+  setPresetMinutes(5);
   updateDisplay();
 })();
