@@ -23,30 +23,46 @@ public class Win32Window {
 
 Add-Type -TypeDefinition $code
 
+# Calculate 1/4 screen bounds (50% W, 50% H)
 $screen = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
 $width = [int]($screen.Width / 2)
 $height = [int]($screen.Height / 2)
 
-$htmlPath = "$PSScriptRoot\index.html".Replace('\', '/')
-$fileUrl = "file:///$htmlPath"
+# Convert local HTML path to proper URI regardless of folder location or non-ASCII/space characters
+$htmlFile = Join-Path $PSScriptRoot "index.html"
+$fileUri = ([System.Uri]$htmlFile).AbsoluteUri
 
-$chrome64 = "${env:ProgramFiles}\Google\Chrome\Application\chrome.exe"
-$chrome86 = "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
-$edge86 = "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe"
-$edge64 = "${env:ProgramFiles}\Microsoft\Edge\Application\msedge.exe"
+# 1. Search Chrome in all standard locations (User LocalAppData + ProgramFiles)
+$chromeCandidates = @(
+    "$env:LocalAppData\Google\Chrome\Application\chrome.exe",
+    "$env:ProgramFiles\Google\Chrome\Application\chrome.exe",
+    "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
+)
+$chromeExe = $chromeCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-$browser = $null
-if (Test-Path $chrome64) { $browser = $chrome64 }
-elseif (Test-Path $chrome86) { $browser = $chrome86 }
-elseif (Test-Path $edge86) { $browser = $edge86 }
-elseif (Test-Path $edge64) { $browser = $edge64 }
+# 2. Search Edge in all standard locations
+$edgeCandidates = @(
+    "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe",
+    "$env:ProgramFiles\Microsoft\Edge\Application\msedge.exe",
+    "$env:LocalAppData\Microsoft\Edge\Application\msedge.exe"
+)
+$edgeExe = $edgeCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-if ($browser) {
-    $proc = Start-Process $browser -ArgumentList "--app=`"$fileUrl`"", "--window-position=0,0", "--window-size=$width,$height" -PassThru
+# Select preferred browser
+$browserExe = $null
+if ($chromeExe) {
+    $browserExe = $chromeExe
+} elseif ($edgeExe) {
+    $browserExe = $edgeExe
+}
+
+if ($browserExe) {
+    $proc = Start-Process -FilePath $browserExe -ArgumentList "--app=$fileUri", "--window-position=0,0", "--window-size=$width,$height" -PassThru
     Start-Sleep -Milliseconds 600
-    if ($proc -and $proc.MainWindowHandle) {
+    if ($proc -and $proc.MainWindowHandle -ne [IntPtr]::Zero) {
         [Win32Window]::SetTopMost($proc.MainWindowHandle)
     }
 } else {
-    Start-Process $fileUrl
+    # Fallback to default system browser
+    Start-Process $fileUri
 }
