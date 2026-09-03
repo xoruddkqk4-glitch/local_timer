@@ -1,0 +1,459 @@
+/* ==========================================================================
+   05Timer - High Visibility Offline Timer Logic
+   ========================================================================== */
+
+(function () {
+  'use strict';
+
+  // --- State Variables ---
+  let mode = 'timer'; // 'timer' | 'stopwatch'
+  let isRunning = false;
+  let timerId = null;
+
+  // Timer State
+  let timerDuration = 300; // default 5 min (in seconds)
+  let timerRemaining = 300;
+  let totalLoops = 1;      // default 1 loop
+  let currentLoop = 1;
+
+  // Stopwatch State
+  let stopwatchElapsed = 0; // in milliseconds
+  let lastTimestamp = 0;
+
+  // Sound State
+  let soundEnabled = true;
+  let audioCtx = null;
+
+  // --- DOM Elements ---
+  const appContainer = document.getElementById('app');
+  const tabTimer = document.getElementById('tab-timer');
+  const tabStopwatch = document.getElementById('tab-stopwatch');
+  
+  const btnSoundToggle = document.getElementById('btn-sound-toggle');
+  const soundIconOn = document.getElementById('sound-icon-on');
+  const soundIconOff = document.getElementById('sound-icon-off');
+  const btnFullscreen = document.getElementById('btn-fullscreen');
+
+  const loopBadge = document.getElementById('loop-badge');
+  const currentLoopDisplay = document.getElementById('current-loop-display');
+  const totalLoopsDisplay = document.getElementById('total-loops-display');
+  const modeStatusText = document.getElementById('mode-status-text');
+
+  const timeWrapper = document.getElementById('time-wrapper');
+  const timeDisplay = document.getElementById('time-display');
+  const msDisplay = document.getElementById('ms-display');
+
+  const presetBar = document.getElementById('preset-bar');
+  const presetBtns = document.querySelectorAll('.preset-btn');
+
+  const btnStartPause = document.getElementById('btn-start-pause');
+  const iconPlay = document.getElementById('icon-play');
+  const iconPause = document.getElementById('icon-pause');
+  const labelStartPause = document.getElementById('label-start-pause');
+
+  const btnReset = document.getElementById('btn-reset');
+  const loopControls = document.getElementById('loop-controls');
+  const loopCountInput = document.getElementById('loop-count-input');
+  const btnLoopMinus = document.getElementById('btn-loop-minus');
+  const btnLoopPlus = document.getElementById('btn-loop-plus');
+
+  const adjMinus1m = document.getElementById('adj-minus-1m');
+  const adjMinus10s = document.getElementById('adj-minus-10s');
+  const adjPlus10s = document.getElementById('adj-plus-10s');
+  const adjPlus1m = document.getElementById('adj-plus-1m');
+
+  // --- Audio Synthesizer (Web Audio API for Offline Use) ---
+  function getAudioContext() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        audioCtx = new AudioContextClass();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  function playTone(freq, type, duration, delay = 0) {
+    if (!soundEnabled) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      
+      setTimeout(() => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      }, delay * 1000);
+    } catch (e) {
+      console.warn('Audio playback error:', e);
+    }
+  }
+
+  function playLoopChime() {
+    // Loop complete sound (D5 -> A5)
+    playTone(587.33, 'sine', 0.25, 0);
+    playTone(880.00, 'sine', 0.4, 0.15);
+  }
+
+  function playFinalAlarm() {
+    // Final timer completion alarm (C5 -> E5 -> G5 -> C6)
+    playTone(523.25, 'triangle', 0.2, 0);
+    playTone(659.25, 'triangle', 0.2, 0.15);
+    playTone(783.99, 'triangle', 0.2, 0.3);
+    playTone(1046.50, 'triangle', 0.6, 0.45);
+  }
+
+  function playClickSound() {
+    playTone(440, 'sine', 0.05, 0);
+  }
+
+  // --- Formatting Helpers ---
+  function formatTime(seconds) {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    const mm = String(mins).padStart(2, '0');
+    const ss = String(secs).padStart(2, '0');
+
+    if (hrs > 0) {
+      const hh = String(hrs).padStart(2, '0');
+      return `${hh}:${mm}:${ss}`;
+    }
+    return `${mm}:${ss}`;
+  }
+
+  function formatStopwatch(ms) {
+    const totalSecs = Math.floor(ms / 1000);
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = Math.floor(totalSecs % 60);
+    const hundredths = Math.floor((ms % 1000) / 10);
+
+    const mm = String(mins).padStart(2, '0');
+    const ss = String(secs).padStart(2, '0');
+    const cs = String(hundredths).padStart(2, '0');
+
+    if (hrs > 0) {
+      const hh = String(hrs).padStart(2, '0');
+      return { timeStr: `${hh}:${mm}:${ss}`, msStr: `.${cs}` };
+    }
+    return { timeStr: `${mm}:${ss}`, msStr: `.${cs}` };
+  }
+
+  // --- Render Display ---
+  function updateDisplay() {
+    if (mode === 'timer') {
+      timeDisplay.textContent = formatTime(timerRemaining);
+      msDisplay.classList.add('hidden');
+      document.title = `(${formatTime(timerRemaining)}) 타이머 - 05Timer`;
+    } else {
+      const formatted = formatStopwatch(stopwatchElapsed);
+      timeDisplay.textContent = formatted.timeStr;
+      msDisplay.textContent = formatted.msStr;
+      msDisplay.classList.remove('hidden');
+      document.title = `(${formatted.timeStr}) 스톱워치 - 05Timer`;
+    }
+
+    currentLoopDisplay.textContent = currentLoop;
+    totalLoopsDisplay.textContent = totalLoops;
+
+    adjustFontSizeToViewport();
+  }
+
+  // --- Dynamic 80% Viewport Width Text Sizing ---
+  function adjustFontSizeToViewport() {
+    const textLength = timeDisplay.textContent.length + (mode === 'stopwatch' ? 3 : 0);
+    // Dynamically adjust CSS custom font size clamp
+    const baseVw = Math.min(80 / (textLength * 0.62), 26);
+    timeDisplay.style.fontSize = `clamp(3rem, ${baseVw}vw, 34vh)`;
+  }
+
+  window.addEventListener('resize', adjustFontSizeToViewport);
+
+  // --- Flash Visual Alert ---
+  function triggerFlashAlert() {
+    appContainer.classList.add('flash-alert');
+    setTimeout(() => {
+      appContainer.classList.remove('flash-alert');
+    }, 1500);
+  }
+
+  // --- Timer Tick Logic ---
+  function startTimer() {
+    if (isRunning) return;
+    isRunning = true;
+    getAudioContext();
+
+    appContainer.classList.add('running');
+    iconPlay.classList.add('hidden');
+    iconPause.classList.remove('hidden');
+    labelStartPause.textContent = '일시정지';
+    btnStartPause.classList.add('running');
+    modeStatusText.textContent = isRunning ? '작동 중...' : '일시정지됨';
+
+    if (mode === 'timer') {
+      timerId = setInterval(() => {
+        if (timerRemaining > 0) {
+          timerRemaining--;
+          updateDisplay();
+        } else {
+          // Timer reached 0! Check loop count
+          if (currentLoop < totalLoops) {
+            playLoopChime();
+            triggerFlashAlert();
+            currentLoop++;
+            timerRemaining = timerDuration;
+            updateDisplay();
+          } else {
+            // All loops finished!
+            pauseTimer();
+            playFinalAlarm();
+            triggerFlashAlert();
+            modeStatusText.textContent = '완료!';
+          }
+        }
+      }, 1000);
+    } else { // Stopwatch mode
+      lastTimestamp = performance.now();
+      timerId = setInterval(() => {
+        const now = performance.now();
+        stopwatchElapsed += (now - lastTimestamp);
+        lastTimestamp = now;
+        updateDisplay();
+      }, 16);
+    }
+  }
+
+  function pauseTimer() {
+    if (!isRunning) return;
+    isRunning = false;
+    clearInterval(timerId);
+    timerId = null;
+
+    appContainer.classList.remove('running');
+    iconPlay.classList.remove('hidden');
+    iconPause.classList.add('hidden');
+    labelStartPause.textContent = '시작';
+    btnStartPause.classList.remove('running');
+    modeStatusText.textContent = '일시정지됨';
+  }
+
+  function toggleStartPause() {
+    playClickSound();
+    if (isRunning) {
+      pauseTimer();
+    } else {
+      startTimer();
+    }
+  }
+
+  function resetTimer() {
+    playClickSound();
+    pauseTimer();
+
+    if (mode === 'timer') {
+      timerRemaining = timerDuration;
+      currentLoop = 1;
+      modeStatusText.textContent = '준비됨';
+    } else {
+      stopwatchElapsed = 0;
+      modeStatusText.textContent = '준비됨';
+    }
+    updateDisplay();
+  }
+
+  // --- Adjust Time (+10s, -10s, +1m, -1m) ---
+  function adjustTime(secondsDelta) {
+    playClickSound();
+    if (mode === 'timer') {
+      if (isRunning) {
+        timerRemaining = Math.max(0, timerRemaining + secondsDelta);
+      } else {
+        timerDuration = Math.max(1, timerDuration + secondsDelta);
+        timerRemaining = timerDuration;
+      }
+    } else { // Stopwatch mode
+      stopwatchElapsed = Math.max(0, stopwatchElapsed + (secondsDelta * 1000));
+    }
+    updateDisplay();
+  }
+
+  // --- Presets Handler ---
+  function setPresetMinutes(mins) {
+    playClickSound();
+    timerDuration = mins * 60;
+    timerRemaining = timerDuration;
+    currentLoop = 1;
+
+    presetBtns.forEach(btn => {
+      btn.classList.toggle('active-preset', parseInt(btn.dataset.minutes) === mins);
+    });
+
+    if (isRunning) {
+      pauseTimer();
+    }
+    modeStatusText.textContent = `${mins}분 설정됨`;
+    updateDisplay();
+  }
+
+  // --- Mode Switching ---
+  function setMode(newMode) {
+    if (mode === newMode) return;
+    playClickSound();
+    pauseTimer();
+    mode = newMode;
+
+    if (mode === 'timer') {
+      tabTimer.classList.add('active');
+      tabTimer.setAttribute('aria-selected', 'true');
+      tabStopwatch.classList.remove('active');
+      tabStopwatch.setAttribute('aria-selected', 'false');
+
+      presetBar.classList.remove('hidden');
+      loopControls.classList.remove('hidden');
+      loopBadge.classList.remove('hidden');
+
+      document.documentElement.style.setProperty('--accent-current', 'var(--accent-timer)');
+      document.documentElement.style.setProperty('--accent-glow-current', 'var(--accent-timer-glow)');
+    } else {
+      tabStopwatch.classList.add('active');
+      tabStopwatch.setAttribute('aria-selected', 'true');
+      tabTimer.classList.remove('active');
+      tabTimer.setAttribute('aria-selected', 'false');
+
+      presetBar.classList.add('hidden');
+      loopControls.classList.add('hidden');
+      loopBadge.classList.add('hidden');
+
+      document.documentElement.style.setProperty('--accent-current', 'var(--accent-stopwatch)');
+      document.documentElement.style.setProperty('--accent-glow-current', 'var(--accent-stopwatch-glow)');
+    }
+
+    modeStatusText.textContent = '준비됨';
+    updateDisplay();
+  }
+
+  // --- Fullscreen Toggle ---
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.warn('Fullscreen error:', err);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  }
+
+  // --- Event Listeners ---
+  tabTimer.addEventListener('click', () => setMode('timer'));
+  tabStopwatch.addEventListener('click', () => setMode('stopwatch'));
+
+  btnSoundToggle.addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+    soundIconOn.classList.toggle('hidden', !soundEnabled);
+    soundIconOff.classList.toggle('hidden', soundEnabled);
+  });
+
+  btnFullscreen.addEventListener('click', toggleFullscreen);
+
+  btnStartPause.addEventListener('click', toggleStartPause);
+  btnReset.addEventListener('click', resetTimer);
+
+  // Preset Buttons
+  presetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mins = parseInt(btn.dataset.minutes, 10);
+      setPresetMinutes(mins);
+    });
+  });
+
+  // Loop Count Inputs
+  loopCountInput.addEventListener('change', (e) => {
+    let val = parseInt(e.target.value, 10);
+    if (isNaN(val) || val < 1) val = 1;
+    totalLoops = val;
+    loopCountInput.value = val;
+    updateDisplay();
+  });
+
+  btnLoopMinus.addEventListener('click', () => {
+    if (totalLoops > 1) {
+      totalLoops--;
+      loopCountInput.value = totalLoops;
+      updateDisplay();
+    }
+  });
+
+  btnLoopPlus.addEventListener('click', () => {
+    totalLoops++;
+    loopCountInput.value = totalLoops;
+    updateDisplay();
+  });
+
+  // Adjust Bar Buttons
+  adjMinus1m.addEventListener('click', () => adjustTime(-60));
+  adjMinus10s.addEventListener('click', () => adjustTime(-10));
+  adjPlus10s.addEventListener('click', () => adjustTime(10));
+  adjPlus1m.addEventListener('click', () => adjustTime(60));
+
+  // --- Keyboard Shortcuts Listener ---
+  window.addEventListener('keydown', (e) => {
+    // Avoid triggering shortcuts when typing in inputs
+    if (e.target.tagName === 'INPUT') return;
+
+    switch (e.key) {
+      case 'ArrowRight':
+        e.preventDefault();
+        adjustTime(10);
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        adjustTime(-10);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        adjustTime(60);
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        adjustTime(-60);
+        break;
+      case ' ':
+      case 'Spacebar':
+        e.preventDefault();
+        toggleStartPause();
+        break;
+      case 'f':
+      case 'F':
+        e.preventDefault();
+        toggleFullscreen();
+        break;
+      case 'r':
+      case 'R':
+        e.preventDefault();
+        resetTimer();
+        break;
+    }
+  });
+
+  // Initial setup
+  setPresetMinutes(5); // Default preset 5 min
+  updateDisplay();
+})();
