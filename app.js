@@ -43,6 +43,7 @@
   const totalLoopsDisplay = document.getElementById('total-loops-display');
   const modeStatusText = document.getElementById('mode-status-text');
 
+  const displaySection = document.querySelector('.display-section');
   const timeWrapper = document.getElementById('time-wrapper');
   const timeDisplay = document.getElementById('time-display');
   const msDisplay = document.getElementById('ms-display');
@@ -51,8 +52,8 @@
   const presetBtns = document.querySelectorAll('.preset-btn');
 
   const btnStartPause = document.getElementById('btn-start-pause');
-  const iconPlay = document.getElementById('icon-play');
-  const iconPause = document.getElementById('icon-pause');
+  const iconPlay = document.iconPlay || document.getElementById('icon-play');
+  const iconPause = document.iconPause || document.getElementById('icon-pause');
   const labelStartPause = document.getElementById('label-start-pause');
 
   const btnReset = document.getElementById('btn-reset');
@@ -192,14 +193,28 @@
     adjustFontSizeToViewport();
   }
 
-  // --- Dynamic 80% Viewport Width Text Sizing ---
+  // --- Dynamic 80% Width & Height Smart Fitting ---
   function adjustFontSizeToViewport() {
-    const textLength = timeDisplay.textContent.length + (mode === 'stopwatch' ? 3 : 0);
-    const baseVw = Math.min(80 / (textLength * 0.62), 26);
-    timeDisplay.style.fontSize = `clamp(3rem, ${baseVw}vw, 34vh)`;
+    if (!timeWrapper || !displaySection) return;
+
+    const text = timeDisplay.textContent + (mode === 'stopwatch' ? '.00' : '');
+    const textLength = text.length;
+
+    const wrapperWidth = timeWrapper.clientWidth || (window.innerWidth * 0.9);
+    const wrapperHeight = timeWrapper.clientHeight || (window.innerHeight * 0.35);
+
+    // Calculate font size from available width (~80% width)
+    const fontFromWidth = (wrapperWidth * 0.82) / (textLength * 0.58);
+
+    // Calculate font size from available height (~85% height)
+    const fontFromHeight = wrapperHeight * 0.85;
+
+    const finalFontSize = Math.min(fontFromWidth, fontFromHeight);
+    timeDisplay.style.fontSize = `${Math.max(28, Math.floor(finalFontSize))}px`;
   }
 
   window.addEventListener('resize', adjustFontSizeToViewport);
+  setTimeout(adjustFontSizeToViewport, 50);
 
   // --- Flash Visual Alert ---
   function triggerFlashAlert() {
@@ -222,8 +237,8 @@
     getAudioContext();
 
     appContainer.classList.add('running');
-    iconPlay.classList.add('hidden');
-    iconPause.classList.remove('hidden');
+    document.getElementById('icon-play').classList.add('hidden');
+    document.getElementById('icon-pause').classList.remove('hidden');
     labelStartPause.textContent = '일시정지';
     btnStartPause.classList.add('running');
     modeStatusText.textContent = '작동 중...';
@@ -266,8 +281,8 @@
     timerId = null;
 
     appContainer.classList.remove('running');
-    iconPlay.classList.remove('hidden');
-    iconPause.classList.add('hidden');
+    document.getElementById('icon-play').classList.remove('hidden');
+    document.getElementById('icon-pause').classList.add('hidden');
     labelStartPause.textContent = '시작';
     btnStartPause.classList.remove('running');
     modeStatusText.textContent = '일시정지됨';
@@ -388,7 +403,6 @@
       return;
     }
 
-    // Toggle off if already active
     if (pipWindow) {
       pipWindow.close();
       return;
@@ -403,7 +417,6 @@
         height: height
       });
 
-      // Copy styles to PiP window
       [...document.styleSheets].forEach((styleSheet) => {
         try {
           const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
@@ -419,10 +432,8 @@
         }
       });
 
-      // Move app container into PiP window
       pipWindow.document.body.appendChild(appContainer);
 
-      // Handle close
       pipWindow.addEventListener('pagehide', () => {
         document.body.appendChild(appContainer);
         pipWindow = null;
