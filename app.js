@@ -64,11 +64,6 @@
   const btnLoopMinus = document.getElementById('btn-loop-minus');
   const btnLoopPlus = document.getElementById('btn-loop-plus');
 
-  const adjMinus1m = document.getElementById('adj-minus-1m');
-  const adjMinus10s = document.getElementById('adj-minus-10s');
-  const adjPlus10s = document.getElementById('adj-plus-10s');
-  const adjPlus1m = document.getElementById('adj-plus-1m');
-
   // --- Window Quarter Screen Position (Top-Left 1/4 Screen) ---
   function resizeToQuarterScreen() {
     try {
@@ -209,7 +204,7 @@
     const fontFromHeight = wrapperHeight * 0.85;
 
     const finalFontSize = Math.min(fontFromWidth, fontFromHeight);
-    timeDisplay.style.fontSize = `${Math.max(28, Math.floor(finalFontSize))}px`;
+    timeDisplay.style.fontSize = `${Math.max(26, Math.floor(finalFontSize))}px`;
   }
 
   window.addEventListener('resize', adjustFontSizeToViewport);
@@ -311,7 +306,7 @@
     updateDisplay();
   }
 
-  // --- Adjust Time (+10s, -10s, +1m, -1m) ---
+  // --- Adjust Time (+10s, -10s, +1m, -1m via keyboard or helpers) ---
   function adjustTime(secondsDelta) {
     playClickSound();
     if (mode === 'timer') {
@@ -402,7 +397,6 @@
       return;
     }
 
-    // Restore if already open
     if (pipWindow) {
       pipWindow.close();
       return;
@@ -417,7 +411,6 @@
         height: height
       });
 
-      // Copy styles
       [...document.styleSheets].forEach((styleSheet) => {
         try {
           const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
@@ -516,12 +509,6 @@
     loopCountInput.value = totalLoops;
     updateDisplay();
   });
-
-  // Adjust Bar Buttons
-  adjMinus1m.addEventListener('click', () => adjustTime(-60));
-  adjMinus10s.addEventListener('click', () => adjustTime(-10));
-  adjPlus10s.addEventListener('click', () => adjustTime(10));
-  adjPlus1m.addEventListener('click', () => adjustTime(60));
 
   // --- Keyboard Shortcuts Listener ---
   window.addEventListener('keydown', (e) => {

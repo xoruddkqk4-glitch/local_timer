@@ -61,7 +61,7 @@
         <span id="ms-display" class="ms-display hidden">.00</span>
       </div>
 
-      <!-- Presets Bar (Timer Mode Only) -->
+      <!-- Presets Bar (Always visible in Timer Mode) -->
       <div id="preset-bar" class="preset-bar">
         <span class="preset-title">빠른 설정:</span>
         <button class="preset-btn" data-minutes="1">1분</button>
@@ -76,50 +76,48 @@
 
     <!-- Controls Bar -->
     <footer class="controls-bar">
-      <!-- Main Play/Pause/Reset Controls -->
-      <div class="main-controls">
-        <button id="btn-start-pause" class="ctrl-btn primary">
-          <svg id="icon-play" class="icon" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          <svg id="icon-pause" class="icon hidden" viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-          <span id="label-start-pause">시작</span>
-        </button>
+      <!-- Left Side: Controls & Stepper -->
+      <div class="controls-left">
+        <!-- Main Play/Pause/Reset Controls -->
+        <div class="main-controls">
+          <button id="btn-start-pause" class="ctrl-btn primary">
+            <svg id="icon-play" class="icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg id="icon-pause" class="icon hidden" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            <span id="label-start-pause">시작</span>
+          </button>
 
-        <button id="btn-reset" class="ctrl-btn secondary" title="리셋 (R)">
-          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          리셋
-        </button>
-      </div>
+          <button id="btn-reset" class="ctrl-btn secondary" title="리셋 (R)">
+            <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            리셋
+          </button>
+        </div>
 
-      <!-- Loop Config Controls (Timer Mode Only) -->
-      <div id="loop-controls" class="loop-controls">
-        <label for="loop-count-input">반복 횟수:</label>
-        <div class="stepper">
-          <button id="btn-loop-minus" class="step-btn">-</button>
-          <input type="number" id="loop-count-input" value="1" min="1" max="999" aria-label="반복 횟수">
-          <button id="btn-loop-plus" class="step-btn">+</button>
+        <!-- Loop Config Controls (Timer Mode Only) -->
+        <div id="loop-controls" class="loop-controls">
+          <label for="loop-count-input">반복 횟수:</label>
+          <div class="stepper">
+            <button id="btn-loop-minus" class="step-btn">-</button>
+            <input type="number" id="loop-count-input" value="1" min="1" max="999" aria-label="반복 횟수">
+            <button id="btn-loop-plus" class="step-btn">+</button>
+          </div>
         </div>
       </div>
 
-      <!-- Adjust Time Shortcut Buttons Bar -->
-      <div class="adjust-bar">
-        <button class="adj-btn" id="adj-minus-1m" title="1분 차감 (아래 화살표)">-1분</button>
-        <button class="adj-btn" id="adj-minus-10s" title="10초 차감 (왼쪽 화살표)">-10초</button>
-        <button class="adj-btn" id="adj-plus-10s" title="10초 추가 (오른쪽 화살표)">+10초</button>
-        <button class="adj-btn" id="adj-plus-1m" title="1분 추가 (위쪽 화살표)">+1분</button>
+      <!-- Right Side: Keyboard Shortcut Legend (Yellow box position) -->
+      <div class="shortcut-legend">
+        <div class="shortcut-title">⌨️ 단축키</div>
+        <div class="shortcut-grid">
+          <span><kbd>Space</kbd> 시작/일시정지</span>
+          <span><kbd>→</kbd> +10초</span>
+          <span><kbd>←</kbd> -10초</span>
+          <span><kbd>↑</kbd> +1분</span>
+          <span><kbd>↓</kbd> -1분</span>
+          <span><kbd>R</kbd> 리셋</span>
+          <span><kbd>T</kbd> 맨위창</span>
+          <span><kbd>F</kbd> 전체화면</span>
+        </div>
       </div>
     </footer>
-
-    <!-- Keyboard Hints Overlay / Legend -->
-    <div class="shortcut-legend">
-      <span><kbd>Space</kbd> 시작/일시정지</span>
-      <span><kbd>→</kbd> +10초</span>
-      <span><kbd>←</kbd> -10초</span>
-      <span><kbd>↑</kbd> +1분</span>
-      <span><kbd>↓</kbd> -1분</span>
-      <span><kbd>F</kbd> 전체화면</span>
-      <span><kbd>T</kbd> 맨 위 창 고정</span>
-      <span><kbd>R</kbd> 리셋</span>
-    </div>
   </div>
 
   <script src="app.js"></script>
