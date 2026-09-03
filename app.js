@@ -202,7 +202,6 @@
     const wrapperWidth = timeWrapper.clientWidth || (window.innerWidth * 0.95);
     const wrapperHeight = timeWrapper.clientHeight || (window.innerHeight * 0.45);
 
-    // Maximize width & height utilization
     const fontFromWidth = (wrapperWidth * 0.9) / (textLength * 0.55);
     const fontFromHeight = wrapperHeight * 0.95;
 
@@ -357,8 +356,13 @@
       tabStopwatch.setAttribute('aria-selected', 'false');
 
       presetBar.classList.remove('hidden');
-      loopControls.classList.remove('hidden');
       loopBadge.classList.remove('hidden');
+
+      // Enable loop controls
+      loopControls.classList.remove('disabled');
+      loopCountInput.disabled = false;
+      btnLoopMinus.disabled = false;
+      btnLoopPlus.disabled = false;
 
       document.documentElement.style.setProperty('--accent-current', 'var(--accent-timer)');
       document.documentElement.style.setProperty('--accent-glow-current', 'var(--accent-timer-glow)');
@@ -369,8 +373,13 @@
       tabTimer.setAttribute('aria-selected', 'false');
 
       presetBar.classList.add('hidden');
-      loopControls.classList.add('hidden');
       loopBadge.classList.add('hidden');
+
+      // Disable loop controls in stopwatch mode (grayed out)
+      loopControls.classList.add('disabled');
+      loopCountInput.disabled = true;
+      btnLoopMinus.disabled = true;
+      btnLoopPlus.disabled = true;
 
       document.documentElement.style.setProperty('--accent-current', 'var(--accent-stopwatch)');
       document.documentElement.style.setProperty('--accent-glow-current', 'var(--accent-stopwatch-glow)');
@@ -400,7 +409,6 @@
       return;
     }
 
-    // Restore if already open
     if (pipWindow) {
       pipWindow.close();
       return;
@@ -415,7 +423,6 @@
         height: height
       });
 
-      // Copy styles
       [...document.styleSheets].forEach((styleSheet) => {
         try {
           const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
@@ -437,7 +444,6 @@
       btnPip.classList.add('active');
       labelPip.textContent = '📌 원래 창으로 복원 (T)';
 
-      // Minimize parent window so ONLY 1 main window (the PiP window) is active
       try {
         window.resizeTo(280, 50);
         window.moveTo(0, 0);

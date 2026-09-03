@@ -19,28 +19,30 @@
     <!-- Top Bar Navigation & Mode Switcher -->
     <header class="top-bar">
       <div class="top-bar-left">
-        <button id="tab-timer" class="tab-btn active" role="tab" aria-selected="true" data-mode="timer">
-          <svg class="icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          루프 타이머
-        </button>
-      </div>
+        <!-- Mode Tabs Grouped Together on Left -->
+        <div class="mode-tabs" role="tablist">
+          <button id="tab-timer" class="tab-btn active" role="tab" aria-selected="true" data-mode="timer">
+            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 16 14"/></svg>
+            루프 타이머
+          </button>
+          <button id="tab-stopwatch" class="tab-btn" role="tab" aria-selected="false" data-mode="stopwatch">
+            <svg class="icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
+            스톱워치
+          </button>
+        </div>
 
-      <!-- Loop Config Controls in Top Bar (Timer Mode Only) -->
-      <div id="loop-controls" class="loop-controls">
-        <label for="loop-count-input">반복 횟수:</label>
-        <div class="stepper">
-          <button id="btn-loop-minus" class="step-btn">-</button>
-          <input type="number" id="loop-count-input" value="1" min="1" max="999" aria-label="반복 횟수">
-          <button id="btn-loop-plus" class="step-btn">+</button>
+        <!-- Loop Config Controls (Aligned Left Next to Mode Tabs) -->
+        <div id="loop-controls" class="loop-controls">
+          <label for="loop-count-input">반복 횟수:</label>
+          <div class="stepper">
+            <button id="btn-loop-minus" class="step-btn">-</button>
+            <input type="number" id="loop-count-input" value="1" min="1" max="999" aria-label="반복 횟수">
+            <button id="btn-loop-plus" class="step-btn">+</button>
+          </div>
         </div>
       </div>
 
       <div class="top-bar-right">
-        <button id="tab-stopwatch" class="tab-btn" role="tab" aria-selected="false" data-mode="stopwatch">
-          <svg class="icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
-          스톱워치
-        </button>
-
         <div class="top-actions">
           <button id="btn-pip" class="icon-btn-text" title="다른 앱 위에 항상 고정 (단축키: T)">
             <svg class="icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="20" rx="3"/><rect x="11" y="11" width="9" height="9" rx="1" fill="currentColor"/></svg>
