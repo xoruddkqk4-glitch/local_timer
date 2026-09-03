@@ -115,11 +115,6 @@ html, body {
   gap: 0.5rem;
 }
 
-.mode-tabs {
-  display: flex;
-  gap: 0.3rem;
-}
-
 .tab-btn {
   display: flex;
   align-items: center;
@@ -154,35 +149,60 @@ html, body {
   border-bottom: 2px solid var(--accent-stopwatch);
 }
 
-/* --- Shortcut Legend in Top Bar --- */
-.shortcut-top-bar {
+/* --- Loop Controls in Top Bar --- */
+.loop-controls {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.72rem;
-  color: var(--text-muted);
+  gap: 0.4rem;
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--panel-border);
-  padding: 0.2rem 0.6rem;
+  padding: 0.15rem 0.55rem;
   border-radius: 8px;
-  white-space: nowrap;
-  overflow-x: auto;
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
-.shortcut-top-bar span {
+.stepper {
   display: flex;
   align-items: center;
-  gap: 0.15rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
 }
 
-kbd {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  padding: 0.05rem 0.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
+.step-btn {
+  background: transparent;
+  border: none;
   color: var(--text-main);
+  width: 22px;
+  height: 22px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.step-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+#loop-count-input {
+  width: 32px;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+#loop-count-input::-webkit-inner-spin-button,
+#loop-count-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .top-actions {
@@ -281,7 +301,7 @@ kbd {
   text-transform: uppercase;
 }
 
-/* --- Ultra Large Time Text (Maximized Height & Width) --- */
+/* --- Ultra Large Time Text --- */
 .time-wrapper {
   display: flex;
   align-items: center;
@@ -436,66 +456,33 @@ kbd {
   transform: translateY(-1px);
 }
 
-/* Loop Stepper Controls (Bottom Single Inline Row) */
-.loop-controls {
+/* --- Shortcut Legend in Bottom Footer --- */
+.shortcut-bottom-bar {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: var(--panel-bg);
-  border: 1px solid var(--panel-border);
-  padding: 0.15rem 0.6rem;
-  border-radius: 6px;
-  backdrop-filter: blur(10px);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--panel-border);
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
+  white-space: nowrap;
+  overflow-x: auto;
 }
 
-.stepper {
+.shortcut-bottom-bar span {
   display: flex;
   align-items: center;
-  background: rgba(0, 0, 0, 0.3);
+  gap: 0.15rem;
+}
+
+kbd {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid var(--panel-border);
-}
-
-.step-btn {
-  background: transparent;
-  border: none;
+  padding: 0.05rem 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
   color: var(--text-main);
-  width: 22px;
-  height: 22px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.step-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-#loop-count-input {
-  width: 32px;
-  background: transparent;
-  border: none;
-  color: var(--text-main);
-  text-align: center;
-  font-size: 0.85rem;
-  font-weight: 700;
-  outline: none;
-  -moz-appearance: textfield;
-}
-
-#loop-count-input::-webkit-inner-spin-button,
-#loop-count-input::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* Responsive tweaks for narrow windows */
-@media (max-width: 680px) {
-  .shortcut-top-bar {
-    display: none;
-  }
 }

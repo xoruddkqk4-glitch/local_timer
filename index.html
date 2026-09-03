@@ -25,14 +25,14 @@
         </button>
       </div>
 
-      <!-- Shortcuts in Top Bar (Between Loop Timer and Stopwatch tabs) -->
-      <div class="shortcut-top-bar" title="단축키 안내">
-        <span><kbd>Space</kbd>시작</span>
-        <span><kbd>→</kbd><kbd>←</kbd>10초</span>
-        <span><kbd>↑</kbd><kbd>↓</kbd>1분</span>
-        <span><kbd>R</kbd>리셋</span>
-        <span><kbd>T</kbd>맨위창</span>
-        <span><kbd>F</kbd>전체화면</span>
+      <!-- Loop Config Controls in Top Bar (Timer Mode Only) -->
+      <div id="loop-controls" class="loop-controls">
+        <label for="loop-count-input">반복 횟수:</label>
+        <div class="stepper">
+          <button id="btn-loop-minus" class="step-btn">-</button>
+          <input type="number" id="loop-count-input" value="1" min="1" max="999" aria-label="반복 횟수">
+          <button id="btn-loop-plus" class="step-btn">+</button>
+        </div>
       </div>
 
       <div class="top-bar-right">
@@ -103,14 +103,14 @@
         </button>
       </div>
 
-      <!-- Loop Config Controls (Bottom Single Line) -->
-      <div id="loop-controls" class="loop-controls">
-        <label for="loop-count-input">반복 횟수:</label>
-        <div class="stepper">
-          <button id="btn-loop-minus" class="step-btn">-</button>
-          <input type="number" id="loop-count-input" value="1" min="1" max="999" aria-label="반복 횟수">
-          <button id="btn-loop-plus" class="step-btn">+</button>
-        </div>
+      <!-- Shortcuts in Footer (Single Bottom Row) -->
+      <div class="shortcut-bottom-bar" title="단축키 안내">
+        <span><kbd>Space</kbd>시작</span>
+        <span><kbd>→</kbd><kbd>←</kbd>10초</span>
+        <span><kbd>↑</kbd><kbd>↓</kbd>1분</span>
+        <span><kbd>R</kbd>리셋</span>
+        <span><kbd>T</kbd>맨위창</span>
+        <span><kbd>F</kbd>전체화면</span>
       </div>
     </footer>
   </div>
