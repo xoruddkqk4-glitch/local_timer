@@ -9,6 +9,7 @@
   let mode = 'timer'; // 'timer' | 'stopwatch'
   let isRunning = false;
   let timerId = null;
+  let currentSizeLevel = 2; // default 1/4 screen (level 2)
 
   // Timer State
   let timerDuration = 300; // default 5 min (in seconds)
@@ -207,14 +208,15 @@
     const text = timeDisplay.textContent + (mode === 'stopwatch' ? '.00' : '');
     const textLength = text.length;
 
-    const wrapperWidth = timeWrapper.clientWidth || (window.innerWidth * 0.95);
-    const wrapperHeight = timeWrapper.clientHeight || (window.innerHeight * 0.45);
+    const activeWin = pipWindow || window;
+    const wrapperWidth = timeWrapper.clientWidth || activeWin.innerWidth || 600;
+    const wrapperHeight = timeWrapper.clientHeight || (activeWin.innerHeight * 0.45) || 200;
 
-    const fontFromWidth = (wrapperWidth * 0.9) / (textLength * 0.55);
-    const fontFromHeight = wrapperHeight * 0.95;
+    const fontFromWidth = (wrapperWidth * 0.88) / (textLength * 0.56);
+    const fontFromHeight = wrapperHeight * 0.85;
 
     const finalFontSize = Math.min(fontFromWidth, fontFromHeight);
-    timeDisplay.style.fontSize = `${Math.max(30, Math.floor(finalFontSize))}px`;
+    timeDisplay.style.fontSize = `${Math.max(24, Math.floor(finalFontSize))}px`;
   }
 
   window.addEventListener('resize', adjustFontSizeToViewport);
@@ -414,29 +416,52 @@
     updateDisplay();
   }
 
-  // --- Window Resizing Levels (1: 35%, 2: 50% default, 3: 65%, 4: 80%, 5: Fullscreen) ---
+  // --- Window Resizing Levels (1: 35%, 2: 50% default, 3: 65%, 4: 80%, 5: 100% Max) ---
   function setWindowSizeLevel(level) {
     blurActiveElements();
-    
+    currentSizeLevel = level;
+
+    // 1. In PiP mode: resize PiP window to target scale (1 to 5) WITHOUT ever exiting PiP mode!
+    if (pipWindow) {
+      const availW = pipWindow.screen ? pipWindow.screen.availWidth : window.screen.availWidth;
+      const availH = pipWindow.screen ? pipWindow.screen.availHeight : window.screen.availHeight;
+
+      let scale = 0.50; // default level 2
+      if (level === 1) scale = 0.35;
+      else if (level === 2) scale = 0.50;
+      else if (level === 3) scale = 0.65;
+      else if (level === 4) scale = 0.80;
+      else if (level === 5) scale = 1.00;
+
+      const w = Math.floor(availW * scale);
+      const h = Math.floor(availH * scale);
+
+      try {
+        pipWindow.resizeTo(w, h);
+        pipWindow.moveTo(0, 0);
+      } catch (e) {
+        console.warn('PiP window resize error:', e);
+      }
+
+      setTimeout(adjustFontSizeToViewport, 50);
+      return;
+    }
+
+    // 2. In Main window mode: level 5 triggers HTML Fullscreen
     if (level === 5) {
       toggleFullscreen();
       return;
     }
 
-    // Exit fullscreen if currently active
-    const targetDoc = (pipWindow && pipWindow.document) ? pipWindow.document : document;
-    if (targetDoc.fullscreenElement) {
-      targetDoc.exitFullscreen().catch(() => {});
-    }
+    // Exit HTML Fullscreen if currently active in main window
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     }
 
-    const targetWin = pipWindow || window;
-    const availW = targetWin.screen ? targetWin.screen.availWidth : window.screen.availWidth;
-    const availH = targetWin.screen ? targetWin.screen.availHeight : window.screen.availHeight;
+    const availW = window.screen.availWidth;
+    const availH = window.screen.availHeight;
 
-    let scale = 0.5; // default level 2
+    let scale = 0.50; // default level 2
     if (level === 1) scale = 0.35;
     else if (level === 2) scale = 0.50;
     else if (level === 3) scale = 0.65;
@@ -445,11 +470,29 @@
     const w = Math.floor(availW * scale);
     const h = Math.floor(availH * scale);
 
+    // Try outer window resizeTo
     try {
-      targetWin.resizeTo(w, h);
-      targetWin.moveTo(0, 0);
+      window.resizeTo(w, h);
+      window.moveTo(0, 0);
     } catch (e) {
       console.warn('Window resize restricted by browser:', e);
+    }
+
+    // Adjust internal container maxWidth for in-tab support (index.html in normal browser tab)
+    if (appContainer) {
+      if (level === 1) {
+        appContainer.style.maxWidth = '550px';
+        appContainer.style.margin = '0 auto';
+      } else if (level === 2) {
+        appContainer.style.maxWidth = '800px';
+        appContainer.style.margin = '0 auto';
+      } else if (level === 3) {
+        appContainer.style.maxWidth = '1100px';
+        appContainer.style.margin = '0 auto';
+      } else if (level === 4) {
+        appContainer.style.maxWidth = '100%';
+        appContainer.style.margin = '0';
+      }
     }
 
     setTimeout(adjustFontSizeToViewport, 50);
@@ -458,25 +501,41 @@
   // --- Fullscreen Toggle ---
   function toggleFullscreen() {
     blurActiveElements();
-    const targetDoc = (pipWindow && pipWindow.document) ? pipWindow.document : document;
-    if (!targetDoc.fullscreenElement && !document.fullscreenElement) {
-      targetDoc.documentElement.requestFullscreen().catch(err => {
-        console.warn('Fullscreen error in target document, falling back to main window:', err);
-        if (pipWindow) {
-          restoreFromPiP();
-          setTimeout(() => {
-            document.documentElement.requestFullscreen().catch(e => {});
-          }, 50);
-        }
+    if (pipWindow) {
+      // In PiP mode, maximize PiP window to 100% screen size smoothly without exiting PiP
+      setWindowSizeLevel(5);
+      return;
+    }
+
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.warn('Fullscreen error in main window:', err);
       });
     } else {
-      if (pipWindow && pipWindow.document && pipWindow.document.fullscreenElement) {
-        pipWindow.document.exitFullscreen().catch(e => {});
-      } else if (document.fullscreenElement) {
+      if (document.exitFullscreen) {
         document.exitFullscreen().catch(e => {});
       }
     }
   }
+
+  // --- Fullscreen change listener to prevent parent window overlap ---
+  function handleFullscreenChange() {
+    const isPiPFullscreen = pipWindow && pipWindow.document && pipWindow.document.fullscreenElement;
+    if (isPiPFullscreen) {
+      // Move parent window completely off-screen so it does not overlap top-left of Fullscreen PiP
+      try {
+        window.moveTo(window.screen.availWidth + 2000, window.screen.availHeight + 2000);
+      } catch (e) {}
+    } else if (pipWindow) {
+      // When exiting Fullscreen while still in PiP mode, bring parent window back to top-left (420x140)
+      try {
+        window.resizeTo(420, 140);
+        window.moveTo(0, 0);
+      } catch (e) {}
+    }
+  }
+
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
 
   // --- Document Picture-in-Picture (Single Window Experience) ---
   async function toggleDocumentPiP() {
@@ -500,9 +559,10 @@
         height: height
       });
 
-      // Enable keyboard shortcuts when focused on the PiP window (both Window and Document)
+      // Enable keyboard shortcuts & fullscreen listeners when focused on the PiP window
       pipWindow.addEventListener('keydown', handleKeyDown);
       pipWindow.document.addEventListener('keydown', handleKeyDown);
+      pipWindow.document.addEventListener('fullscreenchange', handleFullscreenChange);
       try {
         pipWindow.focus();
       } catch (e) {}
@@ -529,7 +589,7 @@
       labelPip.textContent = '📌 복원 (T)';
 
       try {
-        window.resizeTo(280, 50);
+        window.resizeTo(420, 140);
         window.moveTo(0, 0);
       } catch (e) {}
 
@@ -550,8 +610,11 @@
     labelPip.textContent = '📌 맨 위 창 (T)';
     if (pipWindow) {
       try {
+        pipWindow.moveTo(20000, 20000);
         pipWindow.removeEventListener('keydown', handleKeyDown);
         pipWindow.document.removeEventListener('keydown', handleKeyDown);
+        pipWindow.document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        pipWindow.close();
       } catch (e) {}
       pipWindow = null;
     }

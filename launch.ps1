@@ -57,11 +57,7 @@ if ($chromeExe) {
 }
 
 if ($browserExe) {
-    $proc = Start-Process -FilePath $browserExe -ArgumentList "--app=$fileUri", "--window-position=0,0", "--window-size=$width,$height" -PassThru
-    Start-Sleep -Milliseconds 600
-    if ($proc -and $proc.MainWindowHandle -ne [IntPtr]::Zero) {
-        [Win32Window]::SetTopMost($proc.MainWindowHandle)
-    }
+    Start-Process -FilePath $browserExe -ArgumentList "--app=$fileUri", "--window-position=0,0", "--window-size=$width,$height"
 } else {
     # Fallback to default system browser
     Start-Process $fileUri
