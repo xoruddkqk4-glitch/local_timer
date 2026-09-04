@@ -59,6 +59,8 @@
 
   const btnStartPause = document.getElementById('btn-start-pause');
   const labelStartPause = document.getElementById('label-start-pause');
+  const iconPlay = document.getElementById('icon-play');
+  const iconPause = document.getElementById('icon-pause');
 
   const btnReset = document.getElementById('btn-reset');
   const loopControls = document.getElementById('loop-controls');
@@ -174,16 +176,22 @@
 
   // --- Render Display ---
   function updateDisplay() {
+    let titleText = '';
     if (mode === 'timer') {
       timeDisplay.textContent = formatTime(timerRemaining);
       msDisplay.classList.add('hidden');
-      document.title = `(${formatTime(timerRemaining)}) 타이머 - 05Timer`;
+      titleText = `(${formatTime(timerRemaining)}) 타이머 - 05Timer`;
     } else {
       const formatted = formatStopwatch(stopwatchElapsed);
       timeDisplay.textContent = formatted.timeStr;
       msDisplay.textContent = formatted.msStr;
       msDisplay.classList.remove('hidden');
-      document.title = `(${formatted.timeStr}) 스톱워치 - 05Timer`;
+      titleText = `(${formatted.timeStr}) 스톱워치 - 05Timer`;
+    }
+
+    document.title = titleText;
+    if (pipWindow && pipWindow.document) {
+      pipWindow.document.title = titleText;
     }
 
     currentLoopDisplay.textContent = currentLoop;
@@ -233,8 +241,8 @@
     getAudioContext();
 
     appContainer.classList.add('running');
-    document.getElementById('icon-play').classList.add('hidden');
-    document.getElementById('icon-pause').classList.remove('hidden');
+    if (iconPlay) iconPlay.classList.add('hidden');
+    if (iconPause) iconPause.classList.remove('hidden');
     labelStartPause.textContent = '일시정지';
     btnStartPause.classList.add('running');
     modeStatusText.textContent = '작동 중...';
@@ -277,15 +285,28 @@
     timerId = null;
 
     appContainer.classList.remove('running');
-    document.getElementById('icon-play').classList.remove('hidden');
-    document.getElementById('icon-pause').classList.add('hidden');
+    if (iconPlay) iconPlay.classList.remove('hidden');
+    if (iconPause) iconPause.classList.add('hidden');
     labelStartPause.textContent = '시작';
     btnStartPause.classList.remove('running');
     modeStatusText.textContent = '일시정지됨';
   }
 
+  // --- Focus Helper ---
+  function blurActiveElements() {
+    try {
+      if (document.activeElement && typeof document.activeElement.blur === 'function' && document.activeElement.tagName !== 'INPUT') {
+        document.activeElement.blur();
+      }
+      if (pipWindow && pipWindow.document && pipWindow.document.activeElement && typeof pipWindow.document.activeElement.blur === 'function' && pipWindow.document.activeElement.tagName !== 'INPUT') {
+        pipWindow.document.activeElement.blur();
+      }
+    } catch (e) {}
+  }
+
   function toggleStartPause() {
     playClickSound();
+    blurActiveElements();
     if (isRunning) {
       pauseTimer();
     } else {
@@ -295,6 +316,7 @@
 
   function resetTimer() {
     playClickSound();
+    blurActiveElements();
     pauseTimer();
 
     if (mode === 'timer') {
@@ -311,6 +333,7 @@
   // --- Adjust Time (+10s, -10s, +1m, -1m) ---
   function adjustTime(secondsDelta) {
     playClickSound();
+    blurActiveElements();
     if (mode === 'timer') {
       if (isRunning) {
         timerRemaining = Math.max(0, timerRemaining + secondsDelta);
@@ -327,6 +350,7 @@
   // --- Presets Handler ---
   function setPresetMinutes(mins) {
     playClickSound();
+    blurActiveElements();
     timerDuration = mins * 60;
     timerRemaining = timerDuration;
     currentLoop = 1;
@@ -346,6 +370,7 @@
   function setMode(newMode) {
     if (mode === newMode) return;
     playClickSound();
+    blurActiveElements();
     pauseTimer();
     mode = newMode;
 
@@ -389,21 +414,73 @@
     updateDisplay();
   }
 
+  // --- Window Resizing Levels (1: 35%, 2: 50% default, 3: 65%, 4: 80%, 5: Fullscreen) ---
+  function setWindowSizeLevel(level) {
+    blurActiveElements();
+    
+    if (level === 5) {
+      toggleFullscreen();
+      return;
+    }
+
+    // Exit fullscreen if currently active
+    const targetDoc = (pipWindow && pipWindow.document) ? pipWindow.document : document;
+    if (targetDoc.fullscreenElement) {
+      targetDoc.exitFullscreen().catch(() => {});
+    }
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+
+    const targetWin = pipWindow || window;
+    const availW = targetWin.screen ? targetWin.screen.availWidth : window.screen.availWidth;
+    const availH = targetWin.screen ? targetWin.screen.availHeight : window.screen.availHeight;
+
+    let scale = 0.5; // default level 2
+    if (level === 1) scale = 0.35;
+    else if (level === 2) scale = 0.50;
+    else if (level === 3) scale = 0.65;
+    else if (level === 4) scale = 0.80;
+
+    const w = Math.floor(availW * scale);
+    const h = Math.floor(availH * scale);
+
+    try {
+      targetWin.resizeTo(w, h);
+      targetWin.moveTo(0, 0);
+    } catch (e) {
+      console.warn('Window resize restricted by browser:', e);
+    }
+
+    setTimeout(adjustFontSizeToViewport, 50);
+  }
+
   // --- Fullscreen Toggle ---
   function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.warn('Fullscreen error:', err);
+    blurActiveElements();
+    const targetDoc = (pipWindow && pipWindow.document) ? pipWindow.document : document;
+    if (!targetDoc.fullscreenElement && !document.fullscreenElement) {
+      targetDoc.documentElement.requestFullscreen().catch(err => {
+        console.warn('Fullscreen error in target document, falling back to main window:', err);
+        if (pipWindow) {
+          restoreFromPiP();
+          setTimeout(() => {
+            document.documentElement.requestFullscreen().catch(e => {});
+          }, 50);
+        }
       });
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
+      if (pipWindow && pipWindow.document && pipWindow.document.fullscreenElement) {
+        pipWindow.document.exitFullscreen().catch(e => {});
+      } else if (document.fullscreenElement) {
+        document.exitFullscreen().catch(e => {});
       }
     }
   }
 
   // --- Document Picture-in-Picture (Single Window Experience) ---
   async function toggleDocumentPiP() {
+    blurActiveElements();
     if (!('documentPictureInPicture' in window)) {
       alert('사용 중인 브라우저가 Document Picture-in-Picture (맨 위 창)를 지원하지 않거나 파일 프로토콜 제한이 있습니다.\n\nChrome / Edge 116+ 브라우저를 사용해 주세요!');
       return;
@@ -423,8 +500,12 @@
         height: height
       });
 
-      // Enable keyboard shortcuts when focused on the PiP window
+      // Enable keyboard shortcuts when focused on the PiP window (both Window and Document)
       pipWindow.addEventListener('keydown', handleKeyDown);
+      pipWindow.document.addEventListener('keydown', handleKeyDown);
+      try {
+        pipWindow.focus();
+      } catch (e) {}
 
       [...document.styleSheets].forEach((styleSheet) => {
         try {
@@ -462,12 +543,16 @@
   }
 
   function restoreFromPiP() {
+    blurActiveElements();
     if (pipPlaceholder) pipPlaceholder.classList.add('hidden');
     document.body.appendChild(appContainer);
     btnPip.classList.remove('active');
     labelPip.textContent = '📌 맨 위 창 (T)';
     if (pipWindow) {
-      pipWindow.removeEventListener('keydown', handleKeyDown);
+      try {
+        pipWindow.removeEventListener('keydown', handleKeyDown);
+        pipWindow.document.removeEventListener('keydown', handleKeyDown);
+      } catch (e) {}
       pipWindow = null;
     }
 
@@ -501,6 +586,7 @@
     soundEnabled = !soundEnabled;
     soundIconOn.classList.toggle('hidden', !soundEnabled);
     soundIconOff.classList.toggle('hidden', soundEnabled);
+    blurActiveElements();
   });
 
   btnFullscreen.addEventListener('click', toggleFullscreen);
@@ -530,6 +616,7 @@
       totalLoops--;
       loopCountInput.value = totalLoops;
       updateDisplay();
+      blurActiveElements();
     }
   });
 
@@ -537,51 +624,88 @@
     totalLoops++;
     loopCountInput.value = totalLoops;
     updateDisplay();
+    blurActiveElements();
   });
 
   // --- Keyboard Shortcuts Listener ---
   function handleKeyDown(e) {
+    if (e.defaultPrevented) return;
     if (e.target && e.target.tagName === 'INPUT') return;
 
-    switch (e.key) {
-      case 'ArrowRight':
-        e.preventDefault();
-        adjustTime(10);
-        break;
-      case 'ArrowLeft':
-        e.preventDefault();
-        adjustTime(-10);
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        adjustTime(60);
-        break;
-      case 'ArrowDown':
-        e.preventDefault();
-        adjustTime(-60);
-        break;
-      case ' ':
-      case 'Spacebar':
-        e.preventDefault();
-        toggleStartPause();
-        break;
-      case 'f':
-      case 'F':
-        e.preventDefault();
-        toggleFullscreen();
-        break;
-      case 't':
-      case 'T':
-      case 'p':
-      case 'P':
-        e.preventDefault();
-        toggleDocumentPiP();
-        break;
-      case 'r':
-      case 'R':
-        e.preventDefault();
-        resetTimer();
-        break;
+    const key = e.key;
+    const code = e.code;
+
+    // Window Sizing: 1, 2 (current default 1/4 size), 3, 4, 5 (fullscreen)
+    if (code === 'Digit1' || code === 'Numpad1' || key === '1') {
+      e.preventDefault();
+      setWindowSizeLevel(1);
+      return;
+    }
+    if (code === 'Digit2' || code === 'Numpad2' || key === '2') {
+      e.preventDefault();
+      setWindowSizeLevel(2);
+      return;
+    }
+    if (code === 'Digit3' || code === 'Numpad3' || key === '3') {
+      e.preventDefault();
+      setWindowSizeLevel(3);
+      return;
+    }
+    if (code === 'Digit4' || code === 'Numpad4' || key === '4') {
+      e.preventDefault();
+      setWindowSizeLevel(4);
+      return;
+    }
+    if (code === 'Digit5' || code === 'Numpad5' || key === '5' || code === 'KeyF' || key === 'f' || key === 'F' || key === 'ㄹ') {
+      e.preventDefault();
+      setWindowSizeLevel(5);
+      return;
+    }
+
+    // Spacebar (Start / Pause)
+    if (code === 'Space' || key === ' ' || key === 'Spacebar') {
+      e.preventDefault();
+      blurActiveElements();
+      toggleStartPause();
+      return;
+    }
+
+    // Reset (R)
+    if (code === 'KeyR' || key === 'r' || key === 'R' || key === 'ㄱ') {
+      e.preventDefault();
+      blurActiveElements();
+      resetTimer();
+      return;
+    }
+
+    // Always-on-Top / PiP (T or P)
+    if (code === 'KeyT' || code === 'KeyP' || key === 't' || key === 'T' || key === 'p' || key === 'P' || key === 'ㅅ' || key === 'ㅔ') {
+      e.preventDefault();
+      blurActiveElements();
+      toggleDocumentPiP();
+      return;
+    }
+
+    // Time adjustments (Arrows)
+    if (code === 'ArrowRight' || key === 'ArrowRight') {
+      e.preventDefault();
+      adjustTime(10);
+      return;
+    }
+    if (code === 'ArrowLeft' || key === 'ArrowLeft') {
+      e.preventDefault();
+      adjustTime(-10);
+      return;
+    }
+    if (code === 'ArrowUp' || key === 'ArrowUp') {
+      e.preventDefault();
+      adjustTime(60);
+      return;
+    }
+    if (code === 'ArrowDown' || key === 'ArrowDown') {
+      e.preventDefault();
+      adjustTime(-60);
+      return;
     }
   }
 
