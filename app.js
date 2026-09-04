@@ -416,29 +416,42 @@
     updateDisplay();
   }
 
-  // --- Window Resizing Levels (1: 35%, 2: 50% default, 3: 65%, 4: 80%, 5: 100% Max) ---
+  // --- Window Resizing Levels (1: 35%/25%, 2: 50%/33%, 3: 65%/42%, 4: 80%/50%, 5: Fullscreen) ---
   function setWindowSizeLevel(level) {
     blurActiveElements();
     currentSizeLevel = level;
 
-    // 1. In PiP mode: resize PiP window to target scale (1 to 5) WITHOUT ever exiting PiP mode!
+    // Reset container max-width so Fullscreen and main window resizing never get trapped in side margins
+    if (appContainer) {
+      appContainer.style.maxWidth = '100%';
+      appContainer.style.margin = '0';
+    }
+
+    // 1. Level 5 triggers Fullscreen mode
+    if (level === 5) {
+      toggleFullscreen();
+      return;
+    }
+
+    const availW = window.screen.availWidth;
+    const availH = window.screen.availHeight;
+
+    // 2. In PiP (맨 위 창) mode:
+    // Chromium limits Document Picture-in-Picture windows to a maximum of ~50% screen size for security.
+    // Scales above 50% (such as 65% or 80%) get clamped down to 50% by Chrome, making 2, 3, 4 look identical.
+    // To ensure distinct, step-by-step visible window scaling in PiP mode, we map levels 1~4 to 25%, 33%, 42%, and 50% (Chrome's PiP ceiling).
     if (pipWindow) {
-      const availW = pipWindow.screen ? pipWindow.screen.availWidth : window.screen.availWidth;
-      const availH = pipWindow.screen ? pipWindow.screen.availHeight : window.screen.availHeight;
+      let pipScale = 0.33; // default level 2 in PiP
+      if (level === 1) pipScale = 0.25;
+      else if (level === 2) pipScale = 0.33;
+      else if (level === 3) pipScale = 0.42;
+      else if (level === 4) pipScale = 0.50; // Maximum allowed PiP size in Chrome (~50% of screen)
 
-      let scale = 0.50; // default level 2
-      if (level === 1) scale = 0.35;
-      else if (level === 2) scale = 0.50;
-      else if (level === 3) scale = 0.65;
-      else if (level === 4) scale = 0.80;
-      else if (level === 5) scale = 1.00;
-
-      const w = Math.floor(availW * scale);
-      const h = Math.floor(availH * scale);
+      const targetW = Math.floor(availW * pipScale);
+      const targetH = Math.floor(availH * pipScale);
 
       try {
-        pipWindow.resizeTo(w, h);
-        pipWindow.moveTo(0, 0);
+        pipWindow.resizeTo(targetW, targetH);
       } catch (e) {
         console.warn('PiP window resize error:', e);
       }
@@ -447,25 +460,17 @@
       return;
     }
 
-    // 2. In Main window mode: level 5 triggers HTML Fullscreen
-    if (level === 5) {
-      toggleFullscreen();
-      return;
-    }
-
+    // 3. In Main window mode (levels 1, 2, 3, 4):
     // Exit HTML Fullscreen if currently active in main window
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     }
 
-    const availW = window.screen.availWidth;
-    const availH = window.screen.availHeight;
-
     let scale = 0.50; // default level 2
     if (level === 1) scale = 0.35;
     else if (level === 2) scale = 0.50;
     else if (level === 3) scale = 0.65;
-    else if (level === 4) scale = 0.80;
+    else if (level === 4) scale = 0.80; // 80% screen width and height in Restore mode
 
     const w = Math.floor(availW * scale);
     const h = Math.floor(availH * scale);
@@ -478,32 +483,31 @@
       console.warn('Window resize restricted by browser:', e);
     }
 
-    // Adjust internal container maxWidth for in-tab support (index.html in normal browser tab)
-    if (appContainer) {
-      if (level === 1) {
-        appContainer.style.maxWidth = '550px';
-        appContainer.style.margin = '0 auto';
-      } else if (level === 2) {
-        appContainer.style.maxWidth = '800px';
-        appContainer.style.margin = '0 auto';
-      } else if (level === 3) {
-        appContainer.style.maxWidth = '1100px';
-        appContainer.style.margin = '0 auto';
-      } else if (level === 4) {
-        appContainer.style.maxWidth = '100%';
-        appContainer.style.margin = '0';
-      }
-    }
-
     setTimeout(adjustFontSizeToViewport, 50);
   }
 
   // --- Fullscreen Toggle ---
   function toggleFullscreen() {
     blurActiveElements();
+
+    if (appContainer) {
+      appContainer.style.maxWidth = '100%';
+      appContainer.style.margin = '0';
+    }
+
+    // If currently in PiP mode:
+    // Chrome forbids HTML Fullscreen inside PiP popup windows.
+    // 5 key smoothly restores to main window and enters 100% TRUE HTML FULLSCREEN on main window!
     if (pipWindow) {
-      // In PiP mode, maximize PiP window to 100% screen size smoothly without exiting PiP
-      setWindowSizeLevel(5);
+      try {
+        pipWindow.moveTo(20000, 20000); // Move PiP off-screen immediately so no ghost box appears
+      } catch (e) {}
+      restoreFromPiP();
+      setTimeout(() => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      }, 100);
       return;
     }
 
