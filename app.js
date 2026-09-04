@@ -423,6 +423,9 @@
         height: height
       });
 
+      // Enable keyboard shortcuts when focused on the PiP window
+      pipWindow.addEventListener('keydown', handleKeyDown);
+
       [...document.styleSheets].forEach((styleSheet) => {
         try {
           const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
@@ -463,7 +466,10 @@
     document.body.appendChild(appContainer);
     btnPip.classList.remove('active');
     labelPip.textContent = '📌 맨 위 창 (T)';
-    pipWindow = null;
+    if (pipWindow) {
+      pipWindow.removeEventListener('keydown', handleKeyDown);
+      pipWindow = null;
+    }
 
     try {
       window.resizeTo(originalWidth, originalHeight);
@@ -534,8 +540,8 @@
   });
 
   // --- Keyboard Shortcuts Listener ---
-  window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT') return;
+  function handleKeyDown(e) {
+    if (e.target && e.target.tagName === 'INPUT') return;
 
     switch (e.key) {
       case 'ArrowRight':
@@ -577,7 +583,9 @@
         resetTimer();
         break;
     }
-  });
+  }
+
+  window.addEventListener('keydown', handleKeyDown);
 
   // Initial setup
   setPresetMinutes(5);
