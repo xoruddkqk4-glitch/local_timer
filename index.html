@@ -55,6 +55,9 @@
           <button id="btn-theme-menu" class="icon-btn" title="디자인 테마 선택 (단축키: M)">
             <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
           </button>
+          <button id="btn-alarm-menu" class="icon-btn" title="알람음 설정 (단축키: A)">
+            <svg class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </button>
           <button id="btn-sound-toggle" class="icon-btn" title="소리 토글">
             <svg id="sound-icon-on" class="icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
             <svg id="sound-icon-off" class="icon hidden" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v6a1 1 0 0 0 1 1h4.58l3.71 3.71A1 1 0 0 0 20 19V9.41"/><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/></svg>
@@ -140,6 +143,42 @@
       </div>
     </div>
 
+    <!-- Alarm Sound Selection Popover Menu -->
+    <div id="alarm-popover" class="alarm-popover hidden">
+      <div class="alarm-popover-header">
+        <span>🔔 타이머 알람음 설정</span>
+        <button id="btn-close-alarm-popover" class="alarm-close-btn" title="닫기">&times;</button>
+      </div>
+
+      <!-- Volume Slider Section -->
+      <div class="alarm-volume-section">
+        <div class="alarm-volume-header">
+          <span class="alarm-volume-title">
+            <svg class="icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            알람 볼륨
+          </span>
+          <span id="alarm-volume-value" class="alarm-volume-value">80%</span>
+        </div>
+        <input type="range" id="alarm-volume-slider" class="alarm-volume-slider" min="0" max="100" value="80" aria-label="알람 볼륨">
+      </div>
+
+      <!-- Sound List -->
+      <div class="alarm-sound-header-label">알람음 선택 (mp3 및 내장 사운드)</div>
+      <div id="alarm-sound-list" class="alarm-sound-list">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+
+      <!-- Custom MP3 File Load -->
+      <div class="alarm-upload-section">
+        <input type="file" id="alarm-file-input" accept="audio/*" class="hidden">
+        <button id="btn-add-alarm-file" class="alarm-upload-btn" type="button">
+          <svg class="icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          📂 내 MP3 파일 불러오기
+        </button>
+        <span class="alarm-upload-hint">mp3 폴더나 PC의 오디오 파일을 추가할 수 있습니다</span>
+      </div>
+    </div>
+
     <!-- Main Display Section (MAXIMIZED FONT SIZE) -->
     <main class="display-section">
       <!-- Status Badge / Loop Info -->
@@ -197,6 +236,7 @@
         <span><kbd>T</kbd>맨위창</span>
         <span><kbd>D</kbd>낮/밤</span>
         <span><kbd>M</kbd>테마</span>
+        <span><kbd>A</kbd>알람음</span>
         <span><kbd>1</kbd>~<kbd>4</kbd>크기</span>
         <span><kbd>5</kbd>전체화면</span>
       </div>

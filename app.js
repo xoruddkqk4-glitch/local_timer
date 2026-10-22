@@ -21,9 +21,65 @@
   let stopwatchElapsed = 0; // in milliseconds
   let lastTimestamp = 0;
 
-  // Sound State
+  // Sound & Alarm State
   let soundEnabled = true;
   let audioCtx = null;
+  let alarmVolume = 0.8; // 0.0 ~ 1.0 (default 80%)
+  let currentAlarmSoundId = 'mp3-yarsong'; // default to user's mp3 alarm
+  let customSounds = []; // user added sounds [{id, name, category, dataUrl, desc, isCustom}]
+  let currentPreviewAudio = null;
+  let currentPreviewSoundId = null;
+
+  const ALARM_SOUND_PRESETS = [
+    {
+      id: 'mp3-yarsong',
+      name: '야르송 알람',
+      category: 'mp3',
+      tag: 'MP3',
+      path: 'mp3/야르송알람.mp3',
+      desc: '경쾌한 멜로디 알림음 (mp3)'
+    },
+    {
+      id: 'mp3-clear-chime',
+      name: '맑은 차임벨',
+      category: 'mp3',
+      tag: 'MP3',
+      path: 'mp3/맑은차임.mp3',
+      desc: '은은하게 울리는 4화음 맑은 벨'
+    },
+    {
+      id: 'mp3-digital-beep',
+      name: '디지털 비프',
+      category: 'mp3',
+      tag: 'MP3',
+      path: 'mp3/디지털비프.mp3',
+      desc: '클래식 전자 알람 비프음'
+    },
+    {
+      id: 'mp3-marimba',
+      name: '우든 마림바',
+      category: 'mp3',
+      tag: 'MP3',
+      path: 'mp3/마림바.mp3',
+      desc: '따뜻하고 발랄한 마림바 타음'
+    },
+    {
+      id: 'mp3-urgent-siren',
+      name: '긴급 사이렌',
+      category: 'mp3',
+      tag: 'MP3',
+      path: 'mp3/긴급사이렌.mp3',
+      desc: '집중 환기용 펄스 경보음'
+    },
+    {
+      id: 'synth-default',
+      name: '기본 신스음',
+      category: 'synth',
+      tag: '내장',
+      path: null,
+      desc: '내장 오실레이터 순수 합성음'
+    }
+  ];
 
   // Theme State ('default-dark' | 'default-light' | 'apple' | etc.)
   let currentTheme = 'default-dark';
@@ -54,6 +110,15 @@
   const soundIconOn = document.getElementById('sound-icon-on');
   const soundIconOff = document.getElementById('sound-icon-off');
   const btnFullscreen = document.getElementById('btn-fullscreen');
+
+  const btnAlarmMenu = document.getElementById('btn-alarm-menu');
+  const alarmPopover = document.getElementById('alarm-popover');
+  const btnCloseAlarmPopover = document.getElementById('btn-close-alarm-popover');
+  const alarmSoundList = document.getElementById('alarm-sound-list');
+  const alarmVolumeSlider = document.getElementById('alarm-volume-slider');
+  const alarmVolumeValue = document.getElementById('alarm-volume-value');
+  const btnAddAlarmFile = document.getElementById('btn-add-alarm-file');
+  const alarmFileInput = document.getElementById('alarm-file-input');
 
   const loopBadge = document.getElementById('loop-badge');
   const currentLoopDisplay = document.getElementById('current-loop-display');
@@ -108,7 +173,7 @@
     return audioCtx;
   }
 
-  function playTone(freq, type, duration, delay = 0) {
+  function playTone(freq, type, duration, delay = 0, volScale = 1.0) {
     if (!soundEnabled) return;
     try {
       const ctx = getAudioContext();
@@ -121,7 +186,8 @@
         osc.type = type;
         osc.frequency.setValueAtTime(freq, ctx.currentTime);
         
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        const effectiveGain = 0.3 * (typeof volScale === 'number' ? volScale : 1.0) * Math.max(0.1, alarmVolume);
+        gain.gain.setValueAtTime(effectiveGain, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
         
         osc.connect(gain);
@@ -140,11 +206,218 @@
     playTone(880.00, 'sine', 0.4, 0.15);
   }
 
+  function playFinalAlarmSynth(volScale = 1.0) {
+    if (!soundEnabled) return;
+    playTone(523.25, 'triangle', 0.2, 0, volScale);
+    playTone(659.25, 'triangle', 0.2, 0.15, volScale);
+    playTone(783.99, 'triangle', 0.2, 0.3, volScale);
+    playTone(1046.50, 'triangle', 0.6, 0.45, volScale);
+  }
+
+  function getAllSounds() {
+    return [...ALARM_SOUND_PRESETS, ...customSounds];
+  }
+
+  function getSoundById(id) {
+    return getAllSounds().find(s => s.id === id) || ALARM_SOUND_PRESETS[0];
+  }
+
+  function selectAlarmSound(id) {
+    currentAlarmSoundId = id;
+    try {
+      localStorage.setItem('05timer_alarm_sound_id', id);
+    } catch (e) {}
+    renderAlarmSoundsList();
+  }
+
+  function stopPreviewAudio() {
+    if (currentPreviewAudio) {
+      try {
+        currentPreviewAudio.pause();
+        currentPreviewAudio.currentTime = 0;
+      } catch (e) {}
+      currentPreviewAudio = null;
+    }
+    currentPreviewSoundId = null;
+    renderAlarmSoundsList();
+  }
+
+  function playAlarmSound(soundId, isPreview = false) {
+    if (!soundEnabled && !isPreview) return;
+
+    const sound = getSoundById(soundId || currentAlarmSoundId);
+    if (!sound) return;
+
+    const effectiveVol = Math.max(0, Math.min(1, alarmVolume));
+
+    if (sound.category === 'synth') {
+      if (isPreview) {
+        stopPreviewAudio();
+        currentPreviewSoundId = sound.id;
+        renderAlarmSoundsList();
+        playFinalAlarmSynth(1.0);
+        setTimeout(() => {
+          if (currentPreviewSoundId === sound.id) {
+            currentPreviewSoundId = null;
+            renderAlarmSoundsList();
+          }
+        }, 1100);
+      } else {
+        playFinalAlarmSynth(1.0);
+      }
+      return;
+    }
+
+    try {
+      stopPreviewAudio();
+
+      const audioSrc = sound.dataUrl || sound.path;
+      const audio = new Audio(audioSrc);
+      audio.volume = effectiveVol;
+
+      if (isPreview) {
+        currentPreviewAudio = audio;
+        currentPreviewSoundId = sound.id;
+        renderAlarmSoundsList();
+
+        audio.onended = () => {
+          currentPreviewAudio = null;
+          currentPreviewSoundId = null;
+          renderAlarmSoundsList();
+        };
+        audio.onerror = () => {
+          currentPreviewAudio = null;
+          currentPreviewSoundId = null;
+          renderAlarmSoundsList();
+        };
+      }
+
+      const p = audio.play();
+      if (p !== undefined) {
+        p.catch((err) => {
+          console.warn('Audio play failed, falling back to synth:', err);
+          if (!isPreview) {
+            playFinalAlarmSynth(1.0);
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Audio object initialization failed, falling back to synth:', e);
+      if (!isPreview) {
+        playFinalAlarmSynth(1.0);
+      }
+    }
+  }
+
   function playFinalAlarm() {
-    playTone(523.25, 'triangle', 0.2, 0);
-    playTone(659.25, 'triangle', 0.2, 0.15);
-    playTone(783.99, 'triangle', 0.2, 0.3);
-    playTone(1046.50, 'triangle', 0.6, 0.45);
+    playAlarmSound(currentAlarmSoundId, false);
+  }
+
+  function deleteCustomSound(soundId) {
+    if (currentPreviewSoundId === soundId) {
+      stopPreviewAudio();
+    }
+    customSounds = customSounds.filter(s => s.id !== soundId);
+    saveCustomSounds();
+    if (currentAlarmSoundId === soundId) {
+      selectAlarmSound('mp3-yarsong');
+    } else {
+      renderAlarmSoundsList();
+    }
+  }
+
+  function saveCustomSounds() {
+    try {
+      localStorage.setItem('05timer_custom_sounds', JSON.stringify(customSounds));
+    } catch (e) {
+      console.warn('Failed to save custom sounds to localStorage:', e);
+    }
+  }
+
+  function loadCustomSounds() {
+    try {
+      const saved = localStorage.getItem('05timer_custom_sounds');
+      if (saved) {
+        customSounds = JSON.parse(saved);
+      }
+    } catch (e) {
+      customSounds = [];
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function renderAlarmSoundsList() {
+    if (!alarmSoundList) return;
+    const sounds = getAllSounds();
+
+    alarmSoundList.innerHTML = '';
+    sounds.forEach((sound) => {
+      const isSelected = sound.id === currentAlarmSoundId;
+      const isPlaying = sound.id === currentPreviewSoundId;
+
+      const card = document.createElement('div');
+      card.className = `alarm-card ${isSelected ? 'active' : ''}`;
+      card.dataset.soundId = sound.id;
+
+      card.innerHTML = `
+        <div class="alarm-card-left">
+          <div class="alarm-radio-check">
+            ${isSelected ? '<svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="3.5" fill="none"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+          </div>
+          <div class="alarm-card-info">
+            <div class="alarm-card-name-row">
+              <span class="alarm-card-name">${escapeHtml(sound.name)}</span>
+              <span class="alarm-tag">${escapeHtml(sound.tag || (sound.isCustom ? '사용자' : 'MP3'))}</span>
+            </div>
+            <span class="alarm-card-desc">${escapeHtml(sound.desc || '')}</span>
+          </div>
+        </div>
+        <div class="alarm-card-actions">
+          <button type="button" class="alarm-preview-btn ${isPlaying ? 'playing' : ''}" data-sound-id="${sound.id}" title="${isPlaying ? '정지' : '미리듣기'}">
+            ${isPlaying ? '⏹' : '▶'}
+          </button>
+          ${sound.isCustom ? `<button type="button" class="alarm-delete-btn" data-sound-id="${sound.id}" title="삭제">&times;</button>` : ''}
+        </div>
+      `;
+
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.alarm-preview-btn') || e.target.closest('.alarm-delete-btn')) {
+          return;
+        }
+        selectAlarmSound(sound.id);
+        playClickSound();
+      });
+
+      const previewBtn = card.querySelector('.alarm-preview-btn');
+      if (previewBtn) {
+        previewBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (currentPreviewSoundId === sound.id) {
+            stopPreviewAudio();
+          } else {
+            playAlarmSound(sound.id, true);
+          }
+        });
+      }
+
+      const deleteBtn = card.querySelector('.alarm-delete-btn');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteCustomSound(sound.id);
+        });
+      }
+
+      alarmSoundList.appendChild(card);
+    });
   }
 
   function playClickSound() {
@@ -451,11 +724,29 @@
     if (!themePopover) return;
     const shouldShow = typeof show === 'boolean' ? show : themePopover.classList.contains('hidden');
     if (shouldShow) {
+      if (typeof toggleAlarmPopover === 'function') {
+        toggleAlarmPopover(false);
+      }
       themePopover.classList.remove('hidden');
       if (btnThemeMenu) btnThemeMenu.classList.add('active');
     } else {
       themePopover.classList.add('hidden');
       if (btnThemeMenu) btnThemeMenu.classList.remove('active');
+    }
+  }
+
+  function toggleAlarmPopover(show) {
+    if (!alarmPopover) return;
+    const shouldShow = typeof show === 'boolean' ? show : alarmPopover.classList.contains('hidden');
+    if (shouldShow) {
+      toggleThemePopover(false);
+      alarmPopover.classList.remove('hidden');
+      if (btnAlarmMenu) btnAlarmMenu.classList.add('active');
+      renderAlarmSoundsList();
+    } else {
+      alarmPopover.classList.add('hidden');
+      if (btnAlarmMenu) btnAlarmMenu.classList.remove('active');
+      stopPreviewAudio();
     }
   }
 
@@ -831,11 +1122,76 @@
     });
   }
 
+  if (btnAlarmMenu) {
+    btnAlarmMenu.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleAlarmPopover();
+    });
+  }
+
+  if (btnCloseAlarmPopover) {
+    btnCloseAlarmPopover.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleAlarmPopover(false);
+    });
+  }
+
+  // Volume slider event
+  if (alarmVolumeSlider) {
+    alarmVolumeSlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      alarmVolume = val / 100;
+      if (alarmVolumeValue) alarmVolumeValue.textContent = `${val}%`;
+      try {
+        localStorage.setItem('05timer_alarm_volume', String(alarmVolume));
+      } catch (err) {}
+    });
+  }
+
+  // Custom audio file input handling
+  if (btnAddAlarmFile && alarmFileInput) {
+    btnAddAlarmFile.addEventListener('click', () => {
+      alarmFileInput.click();
+    });
+
+    alarmFileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (readEvt) => {
+        const dataUrl = readEvt.target.result;
+        const cleanName = file.name.replace(/\.[^/.]+$/, '');
+        const newSound = {
+          id: 'custom-' + Date.now(),
+          name: cleanName,
+          category: 'custom',
+          tag: '내 MP3',
+          dataUrl: dataUrl,
+          desc: `로컬 파일 (${(file.size / 1024).toFixed(0)}KB)`,
+          isCustom: true
+        };
+        customSounds.push(newSound);
+        saveCustomSounds();
+        selectAlarmSound(newSound.id);
+        renderAlarmSoundsList();
+        playAlarmSound(newSound.id, true);
+      };
+      reader.readAsDataURL(file);
+      alarmFileInput.value = '';
+    });
+  }
+
   // Close popover when clicking outside
   document.addEventListener('click', (e) => {
     if (themePopover && !themePopover.classList.contains('hidden')) {
       if (!themePopover.contains(e.target) && (!btnThemeMenu || !btnThemeMenu.contains(e.target))) {
         toggleThemePopover(false);
+      }
+    }
+    if (alarmPopover && !alarmPopover.classList.contains('hidden')) {
+      if (!alarmPopover.contains(e.target) && (!btnAlarmMenu || !btnAlarmMenu.contains(e.target))) {
+        toggleAlarmPopover(false);
       }
     }
   });
@@ -957,11 +1313,19 @@
       return;
     }
 
-    // Escape: close theme popover if open
+    // Escape: close theme or alarm popover if open
     if (code === 'Escape' || key === 'Escape') {
+      let handled = false;
       if (themePopover && !themePopover.classList.contains('hidden')) {
-        e.preventDefault();
         toggleThemePopover(false);
+        handled = true;
+      }
+      if (alarmPopover && !alarmPopover.classList.contains('hidden')) {
+        toggleAlarmPopover(false);
+        handled = true;
+      }
+      if (handled) {
+        e.preventDefault();
         return;
       }
     }
@@ -979,6 +1343,14 @@
       e.preventDefault();
       blurActiveElements();
       toggleThemePopover();
+      return;
+    }
+
+    // Alarm Sound Menu Popover (A)
+    if (code === 'KeyA' || key === 'a' || key === 'A' || key === 'ㅁ') {
+      e.preventDefault();
+      blurActiveElements();
+      toggleAlarmPopover();
       return;
     }
 
@@ -1015,6 +1387,32 @@
     }
   } catch (e) {}
   applyTheme(currentTheme);
+
+  // Load saved alarm sound & volume
+  loadCustomSounds();
+  try {
+    const savedSound = localStorage.getItem('05timer_alarm_sound_id');
+    if (savedSound) {
+      currentAlarmSoundId = savedSound;
+    } else {
+      currentAlarmSoundId = 'mp3-yarsong'; // default to user's mp3 alarm
+    }
+    const savedVol = localStorage.getItem('05timer_alarm_volume');
+    if (savedVol !== null) {
+      const v = parseFloat(savedVol);
+      if (!isNaN(v) && v >= 0 && v <= 1) {
+        alarmVolume = v;
+      }
+    }
+  } catch (e) {}
+
+  if (alarmVolumeSlider) {
+    alarmVolumeSlider.value = Math.round(alarmVolume * 100);
+  }
+  if (alarmVolumeValue) {
+    alarmVolumeValue.textContent = `${Math.round(alarmVolume * 100)}%`;
+  }
+  renderAlarmSoundsList();
 
   setPresetMinutes(5);
   updateDisplay();
