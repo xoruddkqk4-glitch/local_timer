@@ -45,16 +45,39 @@
 
 ```text
 05timer/
+├── PRODUCT.md        # 제품 정의, 대상 사용자 및 핵심 기능 명세 (Impeccable Product Truth)
+├── DESIGN.md         # 고가시성 다크 테마 디자인 토큰 및 UI 가이드라인 (Design Truth)
 ├── index.html        # 메인 HTML 마크업 및 단축키 안내 스트립
 ├── style.css         # 다크모드, 한 줄 보존(nowrap) & 고가시성 극대화 스타일
 ├── app.js            # 타이머/스톱워치 로직, 뷰포트 맞춤 폰트 스케일링, PiP & 단축키(1~5/Space/R/T)
 ├── 타이머실행.bat     # 더블 클릭 시 화면 좌상단 1/4 크기 최상단 고정 앱 창 실행 스크립트
 ├── launch.ps1        # PowerShell URI 인코딩 & Chrome 경로 자동 탐색 헬퍼
 └── .agents/          # 에이전트 커스텀 규칙 및 스킬 정의
+    ├── rules/
+    │   └── rules.md  # 터미널 전용 고속 검증 및 커맨드 정책 (Rule 1 ~ 9)
     └── skills/
-        └── git-commit/
-            └── SKILL.md
+        ├── apply/           # /apply: 계획서 소스 코드 즉시 반영 스킬
+        ├── ask/             # /ask: 코드 수정 없는 질의응답 및 구현 계획서 수립 스킬
+        ├── git-commit/      # /git-commit: README 누적 업데이트 및 Git 커밋/푸시 스킬
+        ├── impeccable/      # /impeccable: 프론트엔드 디자인 시스템 구축 & 리파인먼트 스킬
+        ├── impeccable-all/  # /impeccable-all: 25대 기준 전수 디자인 검증 & 계획서 자동 생성 스킬
+        └── scratchpad/      # /scratchpad: 브라우저 시각 검증 전용 모드 스킬
 ```
+
+---
+
+## 🤖 AI 에이전트 커스텀 스킬 & 슬래시 명령어
+
+프로젝트 내 작업 생산성과 디자인 품질 관리를 위한 에이전트 커스텀 스킬 및 명령어 세트입니다:
+
+| 명령어 | 스킬 경로 | 설명 및 주요 동작 |
+| :--- | :--- | :--- |
+| **`/impeccable [command]`** | `.agents/skills/impeccable/` | 프론트엔드 디자인 품질 고도화 (`audit`, `polish`, `typeset`, `bolder`, `quieter`, `document`, `harden` 등 세부 명령 제공) |
+| **`/impeccable-all`** | `.agents/skills/impeccable-all/` | 6대 도메인 25개 전수 평가 축 검사, `implementation_plan.md` 계획서 자동 생성 후 `/apply` 대기 (코드 직접 수정 없음) |
+| **`/ask`** | `.agents/skills/ask/` | 소스 코드를 수정하지 않고 질문에 답변하거나 기술 구현 계획서(`implementation_plan.md`) 작성 |
+| **`/apply`** | `.agents/skills/apply/` | 최신 구현 계획서의 변경 사항을 소스 코드에 즉시 단계별 반영 |
+| **`/scratchpad`** | `.agents/skills/scratchpad/` | 브라우저 인스턴스를 직접 띄워 화면 및 UI 인터랙션을 시각적으로 검증 |
+| **`/git-commit`** | `.agents/skills/git-commit/` | 작업 내역 및 검증 결과를 `README.md` 하단에 누적 기록하고 상세 커밋 메시지와 함께 GitHub 원격 저장소 푸시 |
 
 ---
 
@@ -62,3 +85,20 @@
 
 1. **1-Click 권장 실행 방법**: [`타이머실행.bat`](file:///c:/Users/user/Desktop/local/05timer/타이머실행.bat) 파일만 더블 클릭하면 화면 좌측 상단 1/4 크기로 주소창 없이 깔끔하게 열립니다.
 2. **일반 브라우저 실행**: [`index.html`](file:///c:/Users/user/Desktop/local/05timer/index.html)을 웹 브라우저에서 직접 연 후 `T` 키를 누르면 맨 위 창으로 고정할 수 있습니다.
+
+---
+
+## [2026-10-22 10:04] 업데이트 이력 (Commit ID: 75d88d2)
+
+- **수정 내용**:
+  - `impeccable` 및 `impeccable-all` 스킬을 프로젝트에 공식 통합 (`.agents/rules/rules.md`에 Rule 8, 9 추가 반영)
+  - `PRODUCT.md` (Product Truth) 및 `DESIGN.md` (Design Truth 토큰 스키마 & 규격) 신규 작성
+  - `/impeccable-all` 실행을 통해 6대 도메인 25개 평가 축 전수 진단 및 `implementation_plan.md` 발행
+  - `/apply` 실행을 통해 UI 디자인 시스템 고도화 및 리파인먼트 적용:
+    - **P1**: `time-display` 및 버튼의 `[dark-glow]` 제로 오프셋 형광 후광 제거 -> 고대비 폰트 스무딩 및 은은한 소프트 깊이감 그림자(`text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6)`) 적용
+    - **P2**: 8단계로 분산되었던 `border-radius`를 4단계(`sm: 6px`, `md: 10px`, `lg: 14px`, `full: 9999px`)로 통일, 스텝 버튼(20px -> 26px) 및 아이콘 버튼(28px -> 32px) 클릭/터치 타깃 영역 보강
+    - **P3**: 폰트 단계를 3단계(`--font-size-xs: 0.72rem`, `--font-size-sm: 0.8rem`, `--font-size-base: 0.9rem`)로 통합, 인라인 투명도 색상을 `:root` 전역 토큰(`--overlay-dark-1`, `--overlay-dark-2`, `--overlay-dark-3`)으로 변수화
+  - `README.md` 프로젝트 구조 및 에이전트 커스텀 명령어 안내 섹션 보강
+- **검증 결과**:
+  - `impeccable detect .`: **0 anti-patterns found, 0 advisory notes** (안티패턴 및 경고 0건 완전 통과)
+  - `node -c app.js`: 구문 오류 없음 (Exit Code: 0)

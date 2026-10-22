@@ -9,6 +9,19 @@
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   
+  --overlay-dark-1: rgba(0, 0, 0, 0.2);
+  --overlay-dark-2: rgba(0, 0, 0, 0.25);
+  --overlay-dark-3: rgba(0, 0, 0, 0.3);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+
+  --font-size-xs: 0.72rem;
+  --font-size-sm: 0.8rem;
+  --font-size-base: 0.9rem;
+
   --accent-timer: #10b981;
   --accent-timer-glow: rgba(16, 185, 129, 0.3);
   --accent-stopwatch: #06b6d4;
@@ -85,10 +98,10 @@ html, body {
   background: var(--panel-bg);
   backdrop-filter: blur(16px);
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 0.6rem 1.2rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  font-size: 0.9rem;
+  box-shadow: 0 4px 16px var(--overlay-dark-3);
+  font-size: var(--font-size-base);
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -103,7 +116,7 @@ html, body {
   background: var(--panel-bg);
   backdrop-filter: blur(12px);
   border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 0.3rem 0.5rem;
   z-index: 10;
   flex-shrink: 0;
@@ -121,9 +134,9 @@ html, body {
 .mode-tabs {
   display: flex;
   gap: 0.25rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--overlay-dark-1);
   padding: 0.15rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--panel-border);
   white-space: nowrap;
 }
@@ -135,10 +148,10 @@ html, body {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: var(--font-size-sm);
   font-weight: 600;
   padding: 0.28rem 0.65rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   white-space: nowrap;
   word-break: keep-all;
@@ -153,7 +166,7 @@ html, body {
 .tab-btn.active {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 2px 8px var(--overlay-dark-2);
 }
 
 #tab-timer.active {
@@ -169,11 +182,11 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--overlay-dark-2);
   border: 1px solid var(--panel-border);
   padding: 0.15rem 0.5rem;
-  border-radius: 8px;
-  font-size: 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   white-space: nowrap;
   transition: opacity 0.3s ease, filter 0.3s ease;
@@ -193,20 +206,23 @@ html, body {
 .stepper {
   display: flex;
   align-items: center;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
+  background: var(--overlay-dark-3);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   border: 1px solid var(--panel-border);
   white-space: nowrap;
 }
 
 .step-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
   color: var(--text-main);
-  width: 20px;
-  height: 20px;
-  font-size: 0.85rem;
+  width: 26px;
+  height: 26px;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.2s ease;
@@ -222,12 +238,12 @@ html, body {
 }
 
 #loop-count-input {
-  width: 30px;
+  width: 32px;
   background: transparent;
   border: none;
   color: var(--text-main);
   text-align: center;
-  font-size: 0.82rem;
+  font-size: var(--font-size-sm);
   font-weight: 700;
   outline: none;
   -moz-appearance: textfield;
@@ -254,11 +270,11 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   background: transparent;
   border: 1px solid var(--panel-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text-main);
   cursor: pointer;
   flex-shrink: 0;
@@ -274,13 +290,13 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  height: 28px;
-  padding: 0 0.55rem;
+  height: 32px;
+  padding: 0 0.6rem;
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -303,7 +319,7 @@ html, body {
   background: rgba(16, 185, 129, 0.25);
   border-color: rgba(16, 185, 129, 0.6);
   color: #10b981;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 2px 8px var(--overlay-dark-3);
 }
 
 /* --- Display Section --- */
@@ -334,15 +350,15 @@ html, body {
   background: rgba(16, 185, 129, 0.15);
   border: 1px solid rgba(16, 185, 129, 0.4);
   color: var(--accent-timer);
-  padding: 0.15rem 0.5rem;
-  border-radius: 14px;
-  font-size: 0.78rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-xs);
   font-weight: 700;
   white-space: nowrap;
 }
 
 .status-text {
-  font-size: 0.8rem;
+  font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--text-muted);
   letter-spacing: 0.05em;
@@ -370,14 +386,16 @@ html, body {
   letter-spacing: -0.03em;
   color: var(--text-main);
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 50px var(--accent-glow-current);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
   transition: text-shadow 0.3s ease, color 0.3s ease;
   white-space: nowrap;
 }
 
 .app-container.running .time-display {
   color: #ffffff;
-  text-shadow: 0 0 70px var(--accent-glow-current), 0 0 120px var(--accent-glow-current);
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 1px 2px var(--accent-glow-current);
 }
 
 .ms-display {
@@ -402,13 +420,13 @@ html, body {
   background: var(--panel-bg);
   backdrop-filter: blur(10px);
   border: 1px solid var(--panel-border);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 .preset-title {
-  font-size: 0.72rem;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
   font-weight: 600;
   margin-right: 0.15rem;
@@ -419,9 +437,9 @@ html, body {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--text-main);
-  padding: 0.15rem 0.55rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
+  padding: 0.18rem 0.6rem;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -432,7 +450,7 @@ html, body {
   background: var(--accent-timer);
   color: #020617;
   border-color: var(--accent-timer);
-  box-shadow: 0 0 10px var(--accent-timer-glow);
+  box-shadow: 0 2px 8px var(--overlay-dark-3);
   transform: translateY(-1px);
 }
 
@@ -466,10 +484,10 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  font-size: 0.9rem;
+  font-size: var(--font-size-base);
   font-weight: 700;
   padding: 0.45rem 1.4rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.25s ease;
@@ -477,25 +495,25 @@ html, body {
 }
 
 .ctrl-btn.sm {
-  font-size: 0.78rem;
+  font-size: var(--font-size-xs);
   padding: 0.25rem 0.7rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .ctrl-btn.primary {
   background: var(--accent-current);
   color: #020617;
-  box-shadow: 0 4px 16px var(--accent-glow-current);
+  box-shadow: 0 4px 12px var(--overlay-dark-3);
 }
 
 .ctrl-btn.primary:hover {
   transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 6px 20px var(--accent-glow-current);
+  box-shadow: 0 6px 16px var(--overlay-dark-3);
 }
 
 .ctrl-btn.primary.running {
   background: #f59e0b;
-  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 4px 12px var(--overlay-dark-3);
 }
 
 .ctrl-btn.secondary {
@@ -515,12 +533,12 @@ html, body {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.7rem;
+  font-size: var(--font-size-xs);
   color: var(--text-muted);
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--overlay-dark-2);
   border: 1px solid var(--panel-border);
   padding: 0.18rem 0.5rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   white-space: nowrap;
   overflow-x: auto;
 }
@@ -535,10 +553,11 @@ html, body {
 kbd {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 0.05rem 0.25rem;
   font-family: var(--font-mono);
   font-size: 0.65rem;
   color: var(--text-main);
   white-space: nowrap;
 }
+
