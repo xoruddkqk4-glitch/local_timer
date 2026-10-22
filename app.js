@@ -25,6 +25,9 @@
   let soundEnabled = true;
   let audioCtx = null;
 
+  // Theme State ('default-dark' | 'default-light' | 'apple' | etc.)
+  let currentTheme = 'default-dark';
+
   // Document Picture-in-Picture window reference
   let pipWindow = null;
   let originalWidth = 960;
@@ -40,6 +43,13 @@
   
   const btnPip = document.getElementById('btn-pip');
   const labelPip = document.getElementById('label-pip');
+  const btnThemeToggle = document.getElementById('btn-theme-toggle');
+  const themeIconSun = document.getElementById('theme-icon-sun');
+  const themeIconMoon = document.getElementById('theme-icon-moon');
+  const btnThemeMenu = document.getElementById('btn-theme-menu');
+  const themePopover = document.getElementById('theme-popover');
+  const btnCloseThemePopover = document.getElementById('btn-close-theme-popover');
+  const themeCardBtns = document.querySelectorAll('.theme-card-btn');
   const btnSoundToggle = document.getElementById('btn-sound-toggle');
   const soundIconOn = document.getElementById('sound-icon-on');
   const soundIconOff = document.getElementById('sound-icon-off');
@@ -203,20 +213,38 @@
 
   // --- Dynamic Maximum Font Size Fitting ---
   function adjustFontSizeToViewport() {
-    if (!timeWrapper || !displaySection) return;
+    if (!timeWrapper || !displaySection || !appContainer) return;
 
     const text = timeDisplay.textContent + (mode === 'stopwatch' ? '.00' : '');
-    const textLength = text.length;
+    const textLength = Math.max(1, text.length);
 
     const activeWin = pipWindow || window;
-    const wrapperWidth = timeWrapper.clientWidth || activeWin.innerWidth || 600;
-    const wrapperHeight = timeWrapper.clientHeight || (activeWin.innerHeight * 0.45) || 200;
+    const containerWidth = appContainer.clientWidth || activeWin.innerWidth || 600;
+    const containerHeight = appContainer.clientHeight || activeWin.innerHeight || 400;
 
-    const fontFromWidth = (wrapperWidth * 0.88) / (textLength * 0.56);
-    const fontFromHeight = wrapperHeight * 0.85;
+    // Dynamically calculate vertical space occupied by UI chrome
+    const topBar = document.querySelector('.top-bar');
+    const controlsBar = document.querySelector('.controls-bar');
+    const statusContainer = document.querySelector('.status-container');
+    const presetBar = document.getElementById('preset-bar');
+
+    let otherHeight = 0;
+    if (topBar) otherHeight += topBar.offsetHeight;
+    if (controlsBar) otherHeight += controlsBar.offsetHeight;
+    if (statusContainer) otherHeight += statusContainer.offsetHeight;
+    if (presetBar && !presetBar.classList.contains('hidden')) otherHeight += presetBar.offsetHeight;
+    otherHeight += 28; // Container padding and gap buffer
+
+    const availWidth = Math.max(120, containerWidth - 24);
+    const availHeight = Math.max(50, containerHeight - otherHeight);
+
+    // Monospace width ratio (~0.60em)
+    const charWidthRatio = 0.60;
+    const fontFromWidth = (availWidth * 0.94) / (textLength * charWidthRatio);
+    const fontFromHeight = availHeight * 0.90;
 
     const finalFontSize = Math.min(fontFromWidth, fontFromHeight);
-    timeDisplay.style.fontSize = `${Math.max(24, Math.floor(finalFontSize))}px`;
+    timeDisplay.style.fontSize = `${Math.max(18, Math.floor(finalFontSize))}px`;
   }
 
   window.addEventListener('resize', adjustFontSizeToViewport);
@@ -347,6 +375,88 @@
       stopwatchElapsed = Math.max(0, stopwatchElapsed + (secondsDelta * 1000));
     }
     updateDisplay();
+  }
+
+  // --- Theme (8 Curated Designs from .design) Logic ---
+  const LIGHT_THEMES = ['default-light', 'apple', 'retro-win', 'sakura'];
+
+  function isLightTheme(theme) {
+    return LIGHT_THEMES.includes(theme);
+  }
+
+  function applyTheme(theme) {
+    if (theme === 'dark') theme = 'default-dark';
+    if (theme === 'light') theme = 'default-light';
+
+    currentTheme = theme;
+
+    document.documentElement.setAttribute('data-theme', theme);
+    if (appContainer) {
+      appContainer.setAttribute('data-theme', theme);
+    }
+
+    if (pipWindow && pipWindow.document) {
+      try {
+        pipWindow.document.documentElement.setAttribute('data-theme', theme);
+        if (pipWindow.document.body) {
+          pipWindow.document.body.setAttribute('data-theme', theme);
+          pipWindow.document.body.style.background = 'var(--bg-canvas, #020617)';
+        }
+      } catch (e) {}
+    }
+
+    const isLight = isLightTheme(theme);
+
+    if (themeIconSun && themeIconMoon) {
+      themeIconSun.classList.toggle('hidden', isLight);
+      themeIconMoon.classList.toggle('hidden', !isLight);
+    }
+
+    if (btnThemeToggle) {
+      btnThemeToggle.setAttribute('title', isLight ? '밤 모드로 전환 (단축키: D)' : '낮 모드로 전환 (단축키: D)');
+    }
+
+    // Synchronize active card in theme popover
+    if (themeCardBtns) {
+      themeCardBtns.forEach(btn => {
+        const isActive = btn.dataset.themeId === theme;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+    }
+
+    try {
+      localStorage.setItem('05timer_theme', theme);
+    } catch (e) {}
+
+    // Synchronize mode accent variables dynamically from active theme CSS variables
+    if (mode === 'timer') {
+      document.documentElement.style.setProperty('--accent-current', 'var(--accent-timer)');
+      document.documentElement.style.setProperty('--accent-glow-current', 'var(--accent-timer-glow)');
+    } else {
+      document.documentElement.style.setProperty('--accent-current', 'var(--accent-stopwatch)');
+      document.documentElement.style.setProperty('--accent-glow-current', 'var(--accent-stopwatch-glow)');
+    }
+  }
+
+  function toggleTheme() {
+    playClickSound();
+    blurActiveElements();
+    const isLight = isLightTheme(currentTheme);
+    const newTheme = isLight ? 'default-dark' : 'default-light';
+    applyTheme(newTheme);
+  }
+
+  function toggleThemePopover(show) {
+    if (!themePopover) return;
+    const shouldShow = typeof show === 'boolean' ? show : themePopover.classList.contains('hidden');
+    if (shouldShow) {
+      themePopover.classList.remove('hidden');
+      if (btnThemeMenu) btnThemeMenu.classList.add('active');
+    } else {
+      themePopover.classList.add('hidden');
+      if (btnThemeMenu) btnThemeMenu.classList.remove('active');
+    }
   }
 
   // --- Presets Handler ---
@@ -485,6 +595,7 @@
       }
 
       setTimeout(adjustFontSizeToViewport, 50);
+      setTimeout(adjustFontSizeToViewport, 150);
       return;
     }
 
@@ -512,6 +623,7 @@
     }
 
     setTimeout(adjustFontSizeToViewport, 50);
+    setTimeout(adjustFontSizeToViewport, 150);
   }
 
   // --- Fullscreen Toggle ---
@@ -591,12 +703,28 @@
         height: height
       });
 
-      // Enable keyboard shortcuts & fullscreen listeners when focused on the PiP window
+      // Enable keyboard shortcuts, fullscreen & resize listeners when focused on the PiP window
       pipWindow.addEventListener('keydown', handleKeyDown);
       pipWindow.document.addEventListener('keydown', handleKeyDown);
       pipWindow.document.addEventListener('fullscreenchange', handleFullscreenChange);
+      pipWindow.addEventListener('resize', adjustFontSizeToViewport);
       try {
         pipWindow.focus();
+      } catch (e) {}
+
+      // Reset PiP document & body layout styles
+      try {
+        pipWindow.document.documentElement.style.width = '100%';
+        pipWindow.document.documentElement.style.height = '100%';
+        pipWindow.document.documentElement.style.overflow = 'hidden';
+        pipWindow.document.documentElement.setAttribute('data-theme', currentTheme);
+        pipWindow.document.body.style.width = '100%';
+        pipWindow.document.body.style.height = '100%';
+        pipWindow.document.body.style.margin = '0';
+        pipWindow.document.body.style.padding = '0';
+        pipWindow.document.body.style.overflow = 'hidden';
+        pipWindow.document.body.setAttribute('data-theme', currentTheme);
+        pipWindow.document.body.style.background = 'var(--bg-canvas, #020617)';
       } catch (e) {}
 
       [...document.styleSheets].forEach((styleSheet) => {
@@ -629,6 +757,11 @@
         restoreFromPiP();
       });
 
+      // Immediately calculate font size for PiP window dimensions
+      adjustFontSizeToViewport();
+      setTimeout(adjustFontSizeToViewport, 50);
+      setTimeout(adjustFontSizeToViewport, 150);
+
     } catch (err) {
       console.error('PiP request failed:', err);
     }
@@ -644,6 +777,7 @@
       try {
         pipWindow.moveTo(20000, 20000);
         pipWindow.removeEventListener('keydown', handleKeyDown);
+        pipWindow.removeEventListener('resize', adjustFontSizeToViewport);
         pipWindow.document.removeEventListener('keydown', handleKeyDown);
         pipWindow.document.removeEventListener('fullscreenchange', handleFullscreenChange);
         pipWindow.close();
@@ -657,6 +791,8 @@
     } catch (e) {}
 
     updateDisplay();
+    setTimeout(adjustFontSizeToViewport, 50);
+    setTimeout(adjustFontSizeToViewport, 150);
   }
 
   if (btnPipRestore) {
@@ -676,6 +812,45 @@
   if (btnPip) {
     btnPip.addEventListener('click', toggleDocumentPiP);
   }
+
+  if (btnThemeToggle) {
+    btnThemeToggle.addEventListener('click', toggleTheme);
+  }
+
+  if (btnThemeMenu) {
+    btnThemeMenu.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleThemePopover();
+    });
+  }
+
+  if (btnCloseThemePopover) {
+    btnCloseThemePopover.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleThemePopover(false);
+    });
+  }
+
+  // Close popover when clicking outside
+  document.addEventListener('click', (e) => {
+    if (themePopover && !themePopover.classList.contains('hidden')) {
+      if (!themePopover.contains(e.target) && (!btnThemeMenu || !btnThemeMenu.contains(e.target))) {
+        toggleThemePopover(false);
+      }
+    }
+  });
+
+  // Theme cards selection
+  themeCardBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const themeId = btn.dataset.themeId;
+      if (themeId) {
+        playClickSound();
+        applyTheme(themeId);
+        toggleThemePopover(false);
+      }
+    });
+  });
 
   btnSoundToggle.addEventListener('click', () => {
     soundEnabled = !soundEnabled;
@@ -782,6 +957,31 @@
       return;
     }
 
+    // Escape: close theme popover if open
+    if (code === 'Escape' || key === 'Escape') {
+      if (themePopover && !themePopover.classList.contains('hidden')) {
+        e.preventDefault();
+        toggleThemePopover(false);
+        return;
+      }
+    }
+
+    // Day / Night Theme Toggle (D)
+    if (code === 'KeyD' || key === 'd' || key === 'D' || key === 'ㅇ') {
+      e.preventDefault();
+      blurActiveElements();
+      toggleTheme();
+      return;
+    }
+
+    // Theme Menu Popover (M)
+    if (code === 'KeyM' || key === 'm' || key === 'M' || key === 'ㅡ') {
+      e.preventDefault();
+      blurActiveElements();
+      toggleThemePopover();
+      return;
+    }
+
     // Time adjustments (Arrows)
     if (code === 'ArrowRight' || key === 'ArrowRight') {
       e.preventDefault();
@@ -808,6 +1008,14 @@
   window.addEventListener('keydown', handleKeyDown);
 
   // Initial setup
+  try {
+    const savedTheme = localStorage.getItem('05timer_theme');
+    if (savedTheme) {
+      currentTheme = savedTheme;
+    }
+  } catch (e) {}
+  applyTheme(currentTheme);
+
   setPresetMinutes(5);
   updateDisplay();
 })();

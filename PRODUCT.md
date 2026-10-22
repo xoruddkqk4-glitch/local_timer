@@ -31,6 +31,7 @@ web
   - 루프 타이머: 지정된 시간 카운트다운, 1회 완료 시 알림음 및 화면 점멸(Flash), 반복 횟수(루프) 카운트 및 자동 반복.
   - 정밀 스톱워치: 밀리초(.00) 단위 카운트업 제공 (모드 전환 시 반복 횟수 비활성화 처리).
   - 프리셋 버튼: 1분, 2분, 2분 30초, 3분, 5분, 8분, 10분, 15분, 30분 빠른 설정.
+  - 디자인 테마 선택 지원: `.design` 기반 8종 큐레이션 테마(05Timer 딥 다크, 슬레이트 데이, Apple Minimal, 8-Bit Retro Orbit, Windows 95 Classic, Cobalt Cyber, Monochrome, Sakura Chroma) 팔레트 팝오버 메뉴(단축키: M) 및 주간/야간 고속 전환(단축키: D) 지원.
   - Document Picture-in-Picture 최상단 창 지원 및 동적 크기 스케일링(1~4단계, 5단계 Fullscreen).
   - 키보드 단축키 체계 (스페이스바 포커스 자동 블러 처리로 오작동 방지).
 - **기술적 제약 (Constraints)**:
@@ -40,7 +41,7 @@ web
 ## Brand Commitments
 
 - 제품명: 05Timer (High-Visibility Offline Timer)
-- 시각적 톤: 눈의 피로를 최소화하는 딥 다크 모드, 고대비 에메랄드/시안 네온 액센트
+- 시각적 톤: 8종 맞춤형 테마(눈의 피로를 최소화하는 딥 다크, 주간 시인성 라이트, Apple 미니멀, 레트로 8-bit, 윈도우 95, 코발트 사이버 등) 및 고대비 액센트
 
 ## Product Principles
 
