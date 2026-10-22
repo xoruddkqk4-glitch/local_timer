@@ -202,8 +202,7 @@
   }
 
   function playLoopChime() {
-    playTone(587.33, 'sine', 0.25, 0);
-    playTone(880.00, 'sine', 0.4, 0.15);
+    playFinalAlarm();
   }
 
   function playFinalAlarmSynth(volScale = 1.0) {
@@ -557,7 +556,7 @@
           updateDisplay();
         } else {
           if (currentLoop < totalLoops) {
-            playLoopChime();
+            playFinalAlarm();
             triggerFlashAlert();
             currentLoop++;
             timerRemaining = timerDuration;
