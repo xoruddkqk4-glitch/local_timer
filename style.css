@@ -423,6 +423,13 @@ html, body {
   border-radius: var(--radius-lg);
   flex-shrink: 0;
   white-space: nowrap;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.preset-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .preset-title {

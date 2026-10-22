@@ -350,22 +350,50 @@
   }
 
   // --- Presets Handler ---
-  function setPresetMinutes(mins) {
+  function getButtonSeconds(btn) {
+    if (btn.dataset.seconds) {
+      return parseInt(btn.dataset.seconds, 10);
+    }
+    if (btn.dataset.minutes) {
+      return Math.round(parseFloat(btn.dataset.minutes) * 60);
+    }
+    return 0;
+  }
+
+  function setPresetTime(totalSeconds, customLabel) {
     playClickSound();
     blurActiveElements();
-    timerDuration = mins * 60;
+    timerDuration = totalSeconds;
     timerRemaining = timerDuration;
     currentLoop = 1;
 
     presetBtns.forEach(btn => {
-      btn.classList.toggle('active-preset', parseInt(btn.dataset.minutes) === mins);
+      btn.classList.toggle('active-preset', getButtonSeconds(btn) === totalSeconds);
     });
 
     if (isRunning) {
       pauseTimer();
     }
-    modeStatusText.textContent = `${mins}분 설정됨`;
+
+    let label = customLabel;
+    if (!label) {
+      const matchedBtn = Array.from(presetBtns).find(btn => getButtonSeconds(btn) === totalSeconds);
+      if (matchedBtn) {
+        label = matchedBtn.textContent.trim();
+      } else {
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        label = secs > 0 ? `${mins}분 ${secs}초` : `${mins}분`;
+      }
+    }
+
+    modeStatusText.textContent = `${label} 설정됨`;
     updateDisplay();
+  }
+
+  function setPresetMinutes(mins) {
+    const totalSecs = Math.round(mins * 60);
+    setPresetTime(totalSecs);
   }
 
   // --- Mode Switching ---
@@ -664,8 +692,9 @@
   // Preset Buttons
   presetBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      const mins = parseInt(btn.dataset.minutes, 10);
-      setPresetMinutes(mins);
+      const totalSecs = getButtonSeconds(btn);
+      const label = btn.textContent.trim();
+      setPresetTime(totalSecs, label);
     });
   });
 
