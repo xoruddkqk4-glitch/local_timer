@@ -264,6 +264,22 @@
   - `impeccable detect .`: 0 anti-patterns found (Exit Code: 0)
   - `impeccable doctor .`: No drift found (Exit Code: 0)
 
+---
+
+## [2026-10-24 22:12] 업데이트 이력 (Commit ID: 7ccf42d)
+
+- **수정 내용**:
+  - 맨 위 창(Document PiP) 모드 부모 창 UX 안내 카드 및 안전 가이드 고도화:
+    - `index.html`: 어설프게 떠 있던 미니 바 대신, 중앙 집중형 전용 상태 & 안전 가이드 카드(`.pip-notice-card`) 구조로 개편 (작은 타이머 창 실행 안내 문구, 부모 창 종료 방지 ⚠️ 주의 배지, 원래 창으로 타이머 가져오기 복원 버튼)
+    - `style.css`: 글래스모피즘(Glassmorphism) 기반 세련된 카드 레이아웃, 에메랄드 상태 아이콘, 엠버 경고 배지 및 반응형 중앙 정렬 스타일링
+    - `app.js`: 일반 브라우저 탭 환경에서 부모 창이 찌그러지거나 왜곡되지 않고 화면 중앙에 온전하고 쾌적하게 안내 카드가 유지되도록 생명주기 및 뷰포트 크기 제어 최적화
+    - `README.md`: 신규 UX 가이드 변경 내역 반영 및 업데이트 이력 누적 기록
+- **검증 결과**:
+  - `node -c app.js`: 정적 구문 오류 없음 (Exit Code: 0)
+  - `impeccable detect .`: 0 anti-patterns found (Exit Code: 0, Advisory 0건)
+  - `impeccable doctor .`: No drift found (Exit Code: 0)
+
+
 
 
 

@@ -986,19 +986,15 @@
     }
   }
 
-  // --- Fullscreen change listener to keep parent window hidden in PiP mode ---
+  // --- Fullscreen change listener in PiP mode ---
   function handleFullscreenChange() {
-    if (pipWindow) {
-      // Keep parent window off-screen regardless of fullscreen toggles
-      try {
-        window.moveTo(-32000, -32000);
-      } catch (e) {}
-    }
+    // Sync viewport font sizing if fullscreen state changes
+    adjustFontSizeToViewport();
   }
 
   document.addEventListener('fullscreenchange', handleFullscreenChange);
 
-  // --- Document Picture-in-Picture (Single Window Experience) ---
+  // --- Document Picture-in-Picture (Always-on-Top Mode) ---
   async function toggleDocumentPiP() {
     blurActiveElements();
     if (!('documentPictureInPicture' in window)) {
@@ -1071,12 +1067,6 @@
       btnPip.classList.add('active');
       labelPip.textContent = '📌 복원 (T)';
 
-      // Hide parent window completely off-screen (-32000, -32000) for a clean single-window experience
-      try {
-        window.resizeTo(200, 100);
-        window.moveTo(-32000, -32000);
-      } catch (e) {}
-
       pipWindow.addEventListener('pagehide', () => {
         restoreFromPiP();
       });
@@ -1099,7 +1089,6 @@
     labelPip.textContent = '📌 맨 위 창 (T)';
     if (pipWindow) {
       try {
-        pipWindow.moveTo(20000, 20000);
         pipWindow.removeEventListener('keydown', handleKeyDown);
         pipWindow.removeEventListener('resize', adjustFontSizeToViewport);
         pipWindow.document.removeEventListener('keydown', handleKeyDown);
@@ -1109,10 +1098,7 @@
       pipWindow = null;
     }
 
-    // Restore parent window to its exact saved monitor position and size
     try {
-      window.resizeTo(originalWidth, originalHeight);
-      window.moveTo(originalX, originalY);
       window.focus();
     } catch (e) {}
 
