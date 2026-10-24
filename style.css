@@ -38,7 +38,7 @@
   --radius-lg: 14px;
   --radius-full: 9999px;
 
-  --font-size-xs: 0.72rem;
+  --font-size-xs: 0.75rem;
   --font-size-sm: 0.8rem;
   --font-size-base: 0.9rem;
 
@@ -875,9 +875,9 @@ kbd {
   background: var(--kbd-bg);
   border: 1px solid var(--kbd-border);
   border-radius: var(--radius-sm);
-  padding: 0.05rem 0.25rem;
+  padding: 0.1rem 0.35rem;
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--text-main);
   white-space: nowrap;
 }
@@ -921,16 +921,22 @@ kbd {
 .theme-close-btn {
   background: transparent;
   border: none;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   line-height: 1;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 0 0.3rem;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-sm);
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .theme-close-btn:hover {
+  background: var(--hover-bg);
   color: var(--text-main);
 }
 
@@ -1027,16 +1033,22 @@ kbd {
 .alarm-close-btn {
   background: transparent;
   border: none;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   line-height: 1;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 0 0.3rem;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-sm);
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .alarm-close-btn:hover {
+  background: var(--hover-bg);
   color: var(--text-main);
 }
 
@@ -1102,7 +1114,7 @@ kbd {
 }
 
 .alarm-sound-header-label {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -1196,9 +1208,9 @@ kbd {
 }
 
 .alarm-tag {
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  padding: 1px 5px;
+  padding: 2px 6px;
   border-radius: var(--radius-sm);
   background: var(--panel-border);
   color: var(--text-muted);
@@ -1211,7 +1223,7 @@ kbd {
 }
 
 .alarm-card-desc {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -1230,8 +1242,10 @@ kbd {
   border: 1px solid transparent;
   color: var(--text-main);
   border-radius: var(--radius-sm);
-  padding: 0.2rem 0.45rem;
-  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  min-width: 26px;
+  height: 26px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1260,16 +1274,21 @@ kbd {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: 1.1rem;
   line-height: 1;
   cursor: pointer;
-  padding: 0 0.2rem;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-sm);
   transition: color 0.15s ease;
 }
 
 .alarm-delete-btn:hover {
-  color: var(--danger);
+  color: var(--danger-color);
 }
 
 /* Custom Upload Button & Hint */
@@ -1304,7 +1323,7 @@ kbd {
 }
 
 .alarm-upload-hint {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   text-align: center;
 }

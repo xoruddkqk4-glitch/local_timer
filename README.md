@@ -229,6 +229,25 @@
   - `mp3/` 디렉터리 내 신규 보이스 음원 4종 무결성 및 경로 매핑 검증 완료
   - 알람 선택 팝오버 목록 렌더링, 미리듣기(▶/⏹) 및 타이머 완료 시 정상 재생 구조 확인
 
+---
+
+## [2026-10-24 21:19] 업데이트 이력 (Commit ID: 95bd301)
+
+- **수정 내용**:
+  - Impeccable 25대 전수 검증 기반 UI/UX 타이포그래피 및 가독성 개선:
+    - `style.css`:
+      - 최소 폰트 크기 토큰 `--font-size-xs`를 `0.72rem`에서 `0.75rem`(12px)로 상향 조정
+      - 키캡(`kbd`), 알람 태그(`.alarm-tag`), 카드 설명(`.alarm-card-desc`), 업로드 힌트(`.alarm-upload-hint`)의 폰트 크기를 모두 12px(`0.75rem`) 이상으로 통일하여 정적 안티패턴(`[tiny-text]`) 100% 해소
+      - 팝오버 닫기 버튼(`.theme-close-btn`, `.alarm-close-btn`), 음원 미리듣기/삭제 버튼의 최소 터치 타깃 영역(`28px x 28px`) 확보 및 호버 배경 인터랙션 개선
+    - `DESIGN.md`:
+      - 8종 디자인 테마(Apple Minimal, Retro 8-bit, Windows 95, Cobalt Cyber, Monochrome, Sakura 등)의 컬러 팔레트 토큰 공식 등록
+      - 10종 알람 음원 오디오 아키텍처 및 정제된 타이포그래피 스케일 램프(1.25rem, 1.1rem, 0.75rem) 명세 동기화
+- **검증 결과**:
+  - `impeccable detect .`: **0 anti-patterns found** (Exit Code: 0, `[tiny-text]` 경고 해소)
+  - `impeccable doctor .`: **No drift found** (Exit Code: 0, 디자인 문서와 코드 완벽 일치)
+  - `node -c app.js`: 정적 구문 오류 없음 (Exit Code: 0)
+
+
 
 
 
