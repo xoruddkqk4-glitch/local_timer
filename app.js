@@ -40,6 +40,38 @@
       desc: '경쾌한 멜로디 알림음 (mp3)'
     },
     {
+      id: 'mp3-bring-l-selca',
+      name: 'L을 가져가 - 셀카',
+      category: 'mp3',
+      tag: '보이스',
+      path: 'mp3/L을 가져가-셀카.mp3',
+      desc: '보이스 음성 알람 (셀카)'
+    },
+    {
+      id: 'mp3-bring-l-vege',
+      name: 'L을 가져가 - 야채',
+      category: 'mp3',
+      tag: '보이스',
+      path: 'mp3/L을 가져가-야채.mp3',
+      desc: '보이스 음성 알람 (야채)'
+    },
+    {
+      id: 'mp3-bring-l-crisscross',
+      name: 'L을 가져가 - 크리스크로스',
+      category: 'mp3',
+      tag: '보이스',
+      path: 'mp3/L을 가져가-크리스크로스.mp3',
+      desc: '보이스 음성 알람 (크리스크로스)'
+    },
+    {
+      id: 'mp3-bring-l-creamcheese',
+      name: 'L을 가져가 - 크림치즈허니',
+      category: 'mp3',
+      tag: '보이스',
+      path: 'mp3/L을 가져가-크림치즈허니.mp3',
+      desc: '보이스 음성 알람 (크림치즈허니)'
+    },
+    {
       id: 'mp3-clear-chime',
       name: '맑은 차임벨',
       category: 'mp3',
@@ -270,7 +302,7 @@
     try {
       stopPreviewAudio();
 
-      const audioSrc = sound.dataUrl || sound.path;
+      const audioSrc = sound.dataUrl || (sound.path ? encodeURI(sound.path) : '');
       const audio = new Audio(audioSrc);
       audio.volume = effectiveVol;
 
