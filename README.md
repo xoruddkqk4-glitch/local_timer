@@ -8,7 +8,7 @@
 
 ### 1. `타이머실행.bat` 1-Click 최상단 실행 (폴더 이동 완전 지원)
 - **좌상단 1/4 크기 전용 앱 창**: `타이머실행.bat` 더블 클릭 시 주소창 없는 깔끔한 전용 앱 창 형태로 화면 왼쪽 상단(0,0)에 1/4 크기(가로 50%, 세로 50%)로 띄워집니다.
-- **Windows OS 및 Document PiP 지원**: 📌 `맨 위 창 (T)` 버튼 또는 `T` 키 입력 시 브라우저 최상단 고정 팝업(Document Picture-in-Picture) 창으로 즉시 전환됩니다.
+- **Windows OS 및 Document PiP 지원 (단일 창 모드)**: 📌 `맨 위 창 (T)` 버튼 또는 `T` 키 입력 시 브라우저 최상단 고정 팝업(Document Picture-in-Picture) 창으로 즉시 전환됩니다. 전환 시 부모 창을 화면 밖(`-32000, -32000`)으로 자동 은닉하여 화면에는 항상 맨 위에 떠 있는 타이머 창 1개만 표시되며, 복원 시 듀얼 모니터 환경에서도 원래 있던 보조 모니터 좌표로 정확히 복귀합니다.
 - **폴더 이동 및 크롬 경로 탐색 강화**: 폴더 위치 변경 시 발생하던 매개변수 오류(MSN 홈 페이지 연결)를 `[System.Uri]` 완전 URI 인코딩으로 해결하였으며, `AppData\Local` 내 사용자 전용 Chrome 경로까지 자동으로 탐색합니다.
 
 ### 2. 고가시성 대형 시간 표기
@@ -246,6 +246,24 @@
   - `impeccable detect .`: **0 anti-patterns found** (Exit Code: 0, `[tiny-text]` 경고 해소)
   - `impeccable doctor .`: **No drift found** (Exit Code: 0, 디자인 문서와 코드 완벽 일치)
   - `node -c app.js`: 정적 구문 오류 없음 (Exit Code: 0)
+
+---
+
+## [2026-10-24 21:45] 업데이트 이력 (Commit ID: eaaf84b)
+
+- **수정 내용**:
+  - 맨 위 창(Document PiP) 모드 단일 창(Single Window) 경험 및 듀얼 모니터 정밀 복원 구현:
+    - `app.js`:
+      - 맨 위 창 전환 시 원래 창의 현재 모니터 좌표(`screenX`, `screenY`) 및 크기 실시간 동적 스냅샷 보존
+      - 원래 창을 최소 크기(`200x100`)로 축소 후 화면 밖(`-32000, -32000`)으로 완전 은닉하여 화면상에 거슬리는 부모 창 없이 오직 '맨 위 타이머 창 1개'만 표시
+      - 복원(창 닫기, 복원 버튼, 단축키 T) 시 주 모니터 `(0, 0)`으로 튀지 않고, 듀얼 모니터 환경에서도 원래 있던 보조 모니터 위치와 창 크기 그대로 100% 정밀 복원
+      - PiP 창 내 전체화면 토글 시에도 부모 창 은닉 상태 안정적 유지
+    - `README.md`: 단일 창 모드 및 듀얼 모니터 복원 기능 설명 반영 및 누적 업데이트 이력 기록
+- **검증 결과**:
+  - `node -c app.js`: 정적 구문 오류 없음 (Exit Code: 0)
+  - `impeccable detect .`: 0 anti-patterns found (Exit Code: 0)
+  - `impeccable doctor .`: No drift found (Exit Code: 0)
+
 
 
 

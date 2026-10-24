@@ -120,6 +120,8 @@
   let pipWindow = null;
   let originalWidth = 960;
   let originalHeight = 540;
+  let originalX = 0;
+  let originalY = 0;
 
   // --- DOM Elements ---
   const appContainer = document.getElementById('app');
@@ -984,19 +986,12 @@
     }
   }
 
-  // --- Fullscreen change listener to prevent parent window overlap ---
+  // --- Fullscreen change listener to keep parent window hidden in PiP mode ---
   function handleFullscreenChange() {
-    const isPiPFullscreen = pipWindow && pipWindow.document && pipWindow.document.fullscreenElement;
-    if (isPiPFullscreen) {
-      // Move parent window completely off-screen so it does not overlap top-left of Fullscreen PiP
+    if (pipWindow) {
+      // Keep parent window off-screen regardless of fullscreen toggles
       try {
-        window.moveTo(window.screen.availWidth + 2000, window.screen.availHeight + 2000);
-      } catch (e) {}
-    } else if (pipWindow) {
-      // When exiting Fullscreen while still in PiP mode, bring parent window back to top-left (420x140)
-      try {
-        window.resizeTo(420, 140);
-        window.moveTo(0, 0);
+        window.moveTo(-32000, -32000);
       } catch (e) {}
     }
   }
@@ -1017,6 +1012,12 @@
     }
 
     try {
+      // Save current window position and size for accurate multi-monitor restoration
+      originalWidth = window.outerWidth || window.innerWidth || 960;
+      originalHeight = window.outerHeight || window.innerHeight || 540;
+      originalX = (typeof window.screenX === 'number') ? window.screenX : (window.screenLeft || 0);
+      originalY = (typeof window.screenY === 'number') ? window.screenY : (window.screenTop || 0);
+
       const width = Math.min(Math.floor(window.screen.availWidth / 2), 650);
       const height = Math.min(Math.floor(window.screen.availHeight / 2), 480);
 
@@ -1070,9 +1071,10 @@
       btnPip.classList.add('active');
       labelPip.textContent = '📌 복원 (T)';
 
+      // Hide parent window completely off-screen (-32000, -32000) for a clean single-window experience
       try {
-        window.resizeTo(420, 140);
-        window.moveTo(0, 0);
+        window.resizeTo(200, 100);
+        window.moveTo(-32000, -32000);
       } catch (e) {}
 
       pipWindow.addEventListener('pagehide', () => {
@@ -1107,9 +1109,11 @@
       pipWindow = null;
     }
 
+    // Restore parent window to its exact saved monitor position and size
     try {
       window.resizeTo(originalWidth, originalHeight);
-      window.moveTo(0, 0);
+      window.moveTo(originalX, originalY);
+      window.focus();
     } catch (e) {}
 
     updateDisplay();
